@@ -2,7 +2,8 @@ from PySide2 import QtCore, QtWidgets, QtPrintSupport, QtGui
 from PySide2.QtCore import SIGNAL
 from .globals import *
 from .graphics import graphicsView as GrahpicsView
-from .graphics import boxItem as BoxItem
+#from .graphics import boxItem as BoxItem
+from .graphics import Rectangle as BoxItem
 from .textItem import textItemDialog as TextItemDlg
 from .textItem import textItem as TextItem
 import functools
@@ -153,8 +154,9 @@ class mainForm(QtWidgets.QDialog):
 
 
     def addBox(self):
-        BoxItem(self.position(), self.scene)
-
+        #midX = PAGE_SIZE[0] + PAGE_SIZE[0] / 2
+        #midY = PAGE_SIZE[1] + PAGE_SIZE[1] / 2
+        BoxItem(self.position(), self.scene, QtCore.Qt.SolidLine)
 
     def addPixmap(self):
         path = QtCore.QFileInfo(self.filename).path() if self.filename else "."
