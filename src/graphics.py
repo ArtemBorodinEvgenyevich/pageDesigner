@@ -3,22 +3,28 @@ import functools
 from .globals import *
 
 
-class boxItem(QtWidgets.QGraphicsItem):
-    def __init__(self, position, scene, style=QtCore.Qt.SolidLine,
-                 rect=None, matrix=QtGui.QMatrix()):
-        super(boxItem, self).__init__()
-        self.setFlags(QtWidgets.QGraphicsItem.ItemIsMovable |
-                      QtWidgets.QGraphicsItem.ItemIsSelectable |
-                      QtWidgets.QGraphicsItem.ItemIsFocusable |
-                      QtWidgets.QGraphicsItem.ItemSendsGeometryChanges |
-                      QtWidgets.QGraphicsItem.ItemSendsScenePositionChanges)
+class Rectangle(QtWidgets.QGraphicsRectItem):
+    def __init__(self, position, scene, lineWidth, joinStyle,
+                 lineStyle=QtCore.Qt.SolidLine, rect=None, matrix=QtGui.QMatrix()):
+        super(Rectangle, self).__init__()
+        self.setFlags(QtWidgets.QGraphicsItem.ItemIsSelectable
+            | QtWidgets.QGraphicsItem.ItemIsMovable
+            | QtWidgets.QGraphicsItem.ItemIsFocusable
+            | QtWidgets.QGraphicsItem.ItemSendsGeometryChanges
+            | QtWidgets.QGraphicsItem.ItemSendsScenePositionChanges)
+
         if rect is None:
-            rect = QtCore.QRectF(-10 * POINT_SIZE, -POINT_SIZE,
-                                 20 * POINT_SIZE, 2 * POINT_SIZE)
+            rect = QtCore.QRectF(0, 0, 200, 200)
+
         self.rect = rect
-        self.style = style
+        self.style = lineStyle
+        self.lineW = lineWidth
+        self.join = joinStyle
+
         self.setPos(position)
         self.setMatrix(matrix)
+        self.setRect(self.rect)
+
         scene.clearSelection()
         scene.addItem(self)
         self.setSelected(True)
@@ -26,78 +32,125 @@ class boxItem(QtWidgets.QGraphicsItem):
         global RAW
         RAW = True
 
+
+
+    def itemChange(self, change, variant):
+        if change != QtWidgets.QGraphicsRectItem.ItemSelectedChange:
+            global RAW
+            RAW = True
+        return QtWidgets.QGraphicsRectItem.itemChange(self, change, variant)
+
     def parentWidget(self):
         return self.scene().views()[0]
 
-    def boundingRect(self):
-        return self.rect.adjusted(-2, -2, 2, 2)
+    def mouseMoveEvent(self, event):
+        if self.isSelected():
+            if event.buttons() & QtCore.Qt.LeftButton:
+                super(Rectangle, self).mouseMoveEvent(event)
+            elif event.buttons() & QtCore.Qt.MiddleButton:
+                self.rect = QtCore.QRectF(QtCore.QPoint(), event.pos()).normalized()
+                self.prepareGeometryChange()
+                self.setRect(self.rect)
+
+
+    def contextMenuEvent(self, event):
+        def clearList(list):
+            length = len(list)
+            del list[0:length]
+
+        if self.isSelected():
+            super(Rectangle, self).contextMenuEvent(event)
+
+            delta = 10
+            r = self.boundingRect()
+            r.adjust(-delta, -delta, delta, delta)
+            if not r.contains(event.pos()):
+                return
+
+            self.setSelected(True)
+            #wrapped = []
+            menu = QtWidgets.QMenu(self.parentWidget())
+
+            styleMenu = menu.addMenu("Change line style")
+            for text, param in (("Solid", QtCore.Qt.SolidLine),
+                                ("Dashed", QtCore.Qt.DashLine),
+                                ("Dotted", QtCore.Qt.DotLine),
+                                ("DashDotted", QtCore.Qt.DashDotLine),
+                                ("DashDotDotten", QtCore.Qt.DashDotDotLine)):
+                wrapper = functools.partial(self.setStyle, param)
+                #wrapped.append(wrapper)
+                styleMenu.addAction(text, wrapper)
+            menu.addSeparator()
+
+            penMenu = menu.addMenu("Change line width")
+            #clearList(wrapped)
+            for text, param in (("1px", 1),
+                                ("2px", 2),
+                                ("3px", 3),
+                                ("4px", 4),
+                                ("5px", 5),):
+                wrapper = functools.partial(self.setWidth, param)
+                #wrapped.append(wrapper)
+                penMenu.addAction(text, wrapper)
+            menu.addSeparator()
+
+            joinMenu = menu.addMenu("Change line join style")
+            #clearList(wrapped)
+            for text, param in (("Bevel join", QtCore.Qt.BevelJoin),
+                                ("Round join", QtCore.Qt.RoundJoin),
+                                ("Miter join", QtCore.Qt.MiterJoin)):
+                wrapper = functools.partial(self.setJoin, param)
+                # wrapped.append(wrapper)
+                joinMenu.addAction(text, wrapper)
+
+            menu.exec_(event.screenPos())
+
 
     def paint(self, painter, option, widget):
         pen = QtGui.QPen(self.style)
         pen.setColor(QtCore.Qt.black)
-        pen.setWidth(1)
+        pen.setWidth(self.lineW)
+        pen.setJoinStyle(self.join)
+        if self.join == QtCore.Qt.MiterJoin:
+            limit = pen.width() / 2
+            pen.setMiterLimit(limit)
+
+        painter.setPen(pen)
+        painter.setBrush(self.brush())
+
         if option.state & QtWidgets.QStyle.State_Selected:
             pen.setColor(QtCore.Qt.blue)
-        painter.setPen(pen)
-        painter.drawRect(self.rect)
+            painter.setPen(pen)
+            painter.setBrush(QtCore.Qt.NoBrush)
 
-    def itemChange(self, change, variant):
-        if change != QtWidgets.QGraphicsItem.ItemSelectedChange:
-            global RAW
-            RAW = True
-        return QtWidgets.QGraphicsItem.itemChange(self, change, variant)
-
-    def contextMenuEvent(self, event):
-        wrapped = []
-        menu = QtWidgets.QMenu(self.parentWidget())
-        for text, param in (("&Solid", QtCore.Qt.SolidLine),
-                            ("&Dashed", QtCore.Qt.DashLine),
-                            ("D&otted", QtCore.Qt.DotLine),
-                            ("D&ashDotted", QtCore.Qt.DashDotLine),
-                            ("DashDo&tDotten", QtCore.Qt.DashDotDotLine)):
-            wrapper = functools.partial(self.setStyle, param)
-            wrapped.append(wrapper)
-            menu.addAction(text, wrapper)
-        menu.exec_(event.screenPos())
+        painter.drawRect(self.boundingRect())
 
 
     def setStyle(self, style):
+        #pen = self.pen()
+        #pen.setStyle(style)
+        #self.setPen(pen)
         self.style = style
         self.update()
         global RAW
         RAW = True
 
-    def keyPressEvent(self, event):
-        factor = POINT_SIZE / 4
-        changed = False
-        if event.modifiers() & QtCore.Qt.ShiftModifier:
-            if event.key() == QtCore.Qt.Key_Left:
-                self.rect.setRight(self.rect.right() - factor)
-                changed = True
-            elif event.key() == QtCore.Qt.Key_Right:
-                self.rect.setRight(self.rect.right() + factor)
-                changed = True
-            elif event.key() == QtCore.Qt.Key_Up:
-                self.rect.setBottom(self.rect.bottom() - factor)
-                changed = True
-            elif event.key() == QtCore.Qt.Key_Down:
-                self.rect.setBottom(self.rect.bottom() + factor)
-                changed = True
-        if changed:
-            self.update()
-            global RAW
-            RAW = True
-        else:
-            QtWidgets.QGraphicsItem.keyPressEvent(self, event)
+    def setWidth(self, width):
+        #pen = self.pen()
+        #pen.setWidth(width)
+        self.lineW = width
+        self.update()
+        global RAW
+        RAW = True
+
+    def setJoin(self, style):
+
+        self.join = style
+        self.update()
+        global RAW
+        RAW = True
 
 
-    def mousePressEvent(self, event):
-        if event.buttons() & QtCore.Qt.LeftButton:
-            super(boxItem, self).mouseMoveEvent(event)
-        elif event.buttons & QtCore.Qt.MiddleButton:
-            itemPos = self.pos()
-            rect = QtCore.QRectF(itemPos, event.pos()).normalized()
-            self.rect.setRect(rect)
 
 
 class pixmapItem(QtWidgets.QGraphicsPixmapItem):
@@ -106,12 +159,44 @@ class pixmapItem(QtWidgets.QGraphicsPixmapItem):
 
 
 class graphicsView(QtWidgets.QGraphicsView):
-    def __init__(self, parent=None):
+
+    def __init__(self, scene, parent=None):
         super(graphicsView, self).__init__(parent)
-        self.setDragMode(QtWidgets.QGraphicsView.RubberBandDrag)
+        #self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
+        self.scene = scene
+
         self.setRenderHint(QtGui.QPainter.Antialiasing)
         self.setRenderHint(QtGui.QPainter.TextAntialiasing)
+        self.setViewportUpdateMode(QtWidgets.QGraphicsView.BoundingRectViewportUpdate)
+        self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
+        self.setResizeAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+
+        self.setScene(self.scene)
+
 
     def wheelEvent(self, event):
         factor = 1.41 ** (-event.delta() / 240)
         self.scale(factor, factor)
+        global RAW
+        RAW = True
+
+
+    def mousePressEvent(self, event):
+        if event.button() & QtCore.Qt.RightButton:
+            self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
+        else:
+            super(graphicsView, self).mousePressEvent(event)
+
+
+    def mouseReleaseEvent(self, event):
+        if event.button() & QtCore.Qt.RightButton:
+            self.setDragMode(QtWidgets.QGraphicsView.RubberBandDrag)
+        else:
+            super(graphicsView, self).mouseReleaseEvent(event)
+
+
+
+
+

@@ -2,7 +2,7 @@ from PySide2 import QtCore, QtWidgets, QtPrintSupport, QtGui
 from PySide2.QtCore import SIGNAL
 from .globals import *
 from .graphics import graphicsView as GrahpicsView
-from .graphics import boxItem as BoxItem
+from .graphics import Rectangle as BoxItem
 from .textItem import textItemDialog as TextItemDlg
 from .textItem import textItem as TextItem
 import functools
@@ -29,11 +29,11 @@ class mainForm(QtWidgets.QDialog):
         self.printer.setPageSize(QtPrintSupport.QPrinter.A4)
 
 
-        self.view = GrahpicsView()
         self.scene = QtWidgets.QGraphicsScene(self)
         self.scene.setSceneRect(0, 0, PAGE_SIZE[0], PAGE_SIZE[1])
         self.addBorders()
-        self.view.setScene(self.scene)
+        self.view = GrahpicsView(self.scene)
+        #self.view.setScene(self.scene)
 
 
         self.wrapped = []
@@ -46,7 +46,7 @@ class mainForm(QtWidgets.QDialog):
                            ("C&ut", self.cut),
                            ("&Paste", self.paste),
                            ("&Delete...", self.delete),
-                           ("&Rotate", self.rotate),
+                            # TODO - rotate()
                            ("Pri&nt...", self.printFile),
                            ("&Open...", self.open),
                            ("&Save", self.save),
@@ -153,8 +153,9 @@ class mainForm(QtWidgets.QDialog):
 
 
     def addBox(self):
-        BoxItem(self.position(), self.scene)
-
+        #midX = PAGE_SIZE[0] + PAGE_SIZE[0] / 2
+        #midY = PAGE_SIZE[1] + PAGE_SIZE[1] / 2
+        BoxItem(self.position(), self.scene, 2, QtCore.Qt.BevelJoin, QtCore.Qt.SolidLine)
 
     def addPixmap(self):
         path = QtCore.QFileInfo(self.filename).path() if self.filename else "."
@@ -246,14 +247,6 @@ class mainForm(QtWidgets.QDialog):
                 item.moveBy(0, yAlignment - bottomYs[i])
         global RAW
         RAW = True
-
-
-    def rotate(self):
-        for item in self.scene.selectedItems():
-            coord = item.pos()
-            print(coord)
-            item.rotate(15)
-        self.scene.update()
 
 
     def delete(self):
@@ -364,6 +357,8 @@ class mainForm(QtWidgets.QDialog):
         elif isinstance(item, BoxItem):
             stream.writeQString("Box")
             stream << item.pos() << item.matrix() << item.rect
+            stream.writeInt8(item.lineW)
+            stream.writeInt16(item.join)
             stream.writeInt16(item.style)
 
 
@@ -373,6 +368,7 @@ class mainForm(QtWidgets.QDialog):
         matrix = QtGui.QMatrix()
         type = stream.readQString()
         stream >> position >> matrix
+
         if offset:
             position += QtCore.QPointF(offset, offset)
         if type == "Text":
@@ -383,12 +379,16 @@ class mainForm(QtWidgets.QDialog):
         elif type == "Box":
             rect = QtCore.QRectF()
             stream >> rect
+            width = int(stream.readInt8())
+            join = QtCore.Qt.PenJoinStyle(stream.readInt16())
             style = QtCore.Qt.PenStyle(stream.readInt16())
-            BoxItem(position, self.scene, style, rect, matrix)
+            BoxItem(position, self.scene, width, join, style, rect, matrix)
         elif type == "Pixmap":
             pixmap = QtGui.QPixmap()
             stream >> pixmap
             self.createPixmapItem(pixmap, position, matrix)
+
+        self.scene.clearSelection()
 
 
 
