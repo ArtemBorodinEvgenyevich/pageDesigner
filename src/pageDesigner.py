@@ -7,7 +7,6 @@ from .textItem import textItemDialog as TextItemDlg
 from .textItem import textItem as TextItem
 import functools
 import random
-import sys
 
 MAC = "qt_mac_set_native_menubar" in dir()
 

@@ -68,7 +68,6 @@ class Rectangle(QtWidgets.QGraphicsRectItem):
                 return
 
             self.setSelected(True)
-            #wrapped = []
             menu = QtWidgets.QMenu(self.parentWidget())
 
             styleMenu = menu.addMenu("Change line style")
@@ -78,29 +77,24 @@ class Rectangle(QtWidgets.QGraphicsRectItem):
                                 ("DashDotted", QtCore.Qt.DashDotLine),
                                 ("DashDotDotten", QtCore.Qt.DashDotDotLine)):
                 wrapper = functools.partial(self.setStyle, param)
-                #wrapped.append(wrapper)
                 styleMenu.addAction(text, wrapper)
             menu.addSeparator()
 
             penMenu = menu.addMenu("Change line width")
-            #clearList(wrapped)
             for text, param in (("1px", 1),
                                 ("2px", 2),
                                 ("3px", 3),
                                 ("4px", 4),
                                 ("5px", 5),):
                 wrapper = functools.partial(self.setWidth, param)
-                #wrapped.append(wrapper)
                 penMenu.addAction(text, wrapper)
             menu.addSeparator()
 
             joinMenu = menu.addMenu("Change line join style")
-            #clearList(wrapped)
             for text, param in (("Bevel join", QtCore.Qt.BevelJoin),
                                 ("Round join", QtCore.Qt.RoundJoin),
                                 ("Miter join", QtCore.Qt.MiterJoin)):
                 wrapper = functools.partial(self.setJoin, param)
-                # wrapped.append(wrapper)
                 joinMenu.addAction(text, wrapper)
 
             menu.exec_(event.screenPos())
@@ -127,17 +121,12 @@ class Rectangle(QtWidgets.QGraphicsRectItem):
 
 
     def setStyle(self, style):
-        #pen = self.pen()
-        #pen.setStyle(style)
-        #self.setPen(pen)
         self.style = style
         self.update()
         global RAW
         RAW = True
 
     def setWidth(self, width):
-        #pen = self.pen()
-        #pen.setWidth(width)
         self.lineW = width
         self.update()
         global RAW
@@ -162,7 +151,6 @@ class graphicsView(QtWidgets.QGraphicsView):
 
     def __init__(self, scene, parent=None):
         super(graphicsView, self).__init__(parent)
-        #self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
         self.scene = scene
 
         self.setRenderHint(QtGui.QPainter.Antialiasing)
