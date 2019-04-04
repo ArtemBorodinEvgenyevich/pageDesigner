@@ -1,6 +1,6 @@
-from PySide2 import QtGui, QtCore, QtWidgets
 import functools
-from .globals import *
+
+from PySide2 import QtGui, QtCore, QtWidgets
 
 
 class Rectangle(QtWidgets.QGraphicsRectItem):
@@ -113,7 +113,7 @@ class Rectangle(QtWidgets.QGraphicsRectItem):
         painter.setBrush(self.brush())
 
         if option.state & QtWidgets.QStyle.State_Selected:
-            pen.setColor(QtCore.Qt.blue)
+            pen.setColor(QtGui.QColor(51, 122, 255))
             painter.setPen(pen)
             painter.setBrush(QtCore.Qt.NoBrush)
 
@@ -153,6 +153,9 @@ class graphicsView(QtWidgets.QGraphicsView):
         super(graphicsView, self).__init__(parent)
         self.scene = scene
 
+        self.setObjectName("graphicsView")
+
+        self.setDragMode(QtWidgets.QGraphicsView.RubberBandDrag)
         self.setRenderHint(QtGui.QPainter.Antialiasing)
         self.setRenderHint(QtGui.QPainter.TextAntialiasing)
         self.setViewportUpdateMode(QtWidgets.QGraphicsView.BoundingRectViewportUpdate)
