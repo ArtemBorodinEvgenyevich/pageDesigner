@@ -1,6 +1,7 @@
 from PySide2 import QtCore, QtGui, QtWidgets
 from PySide2.QtCore import SIGNAL
-from .globals import *
+
+from globals import *
 
 
 class textItem(QtWidgets.QGraphicsTextItem):

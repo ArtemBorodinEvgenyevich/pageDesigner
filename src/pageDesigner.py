@@ -5,7 +5,8 @@ import sys
 from PySide2 import QtCore, QtWidgets, QtPrintSupport, QtGui
 from PySide2.QtCore import SIGNAL
 
-from .globals import *
+from globals import *
+from .dialogs import settingsGUI as GUIsettings
 from .graphics import Rectangle as BoxItem
 from .graphics import graphicsView as GrahpicsView
 from .textItem import textItem as TextItem
@@ -19,8 +20,6 @@ class mainWindow(QtWidgets.QMainWindow):
         super(mainWindow, self).__init__()
 
         self.absolutePath = path
-        # self.ui_style_path = self.absolutePath + "/stylesheets/mainStyleSheet.css"
-
 
         self.filename = ""
         self.copiedItems = QtCore.QByteArray()
@@ -59,9 +58,8 @@ class mainWindow(QtWidgets.QMainWindow):
         fileMenu = QtWidgets.QMenu("&File", self.navBar)
         for text, slot, shortcut, tooltip in (("Open...", self.open, "Ctrl+O", "Open existing file"),
                                               ("Save", self.save, "Ctrl+S", "Save current file"),
-                                              (
-                                                      "Print...", self.printFile, "Ctrl+P",
-                                                      "Send file to device / PDF export"),
+                                              ("Print...", self.printFile, "Ctrl+P",
+                                               "Send file to device / PDF export"),
                                               ("Quit", self.quitApp, "Ctrl+Q", "Quit application")):
             action = QtWidgets.QAction(text, self)
             action.connect(SIGNAL("triggered()"), slot)
@@ -70,7 +68,16 @@ class mainWindow(QtWidgets.QMainWindow):
             fileMenu.addAction(action)
             fileMenu.addSeparator()
 
+        viewMenu = QtWidgets.QMenu("&Edit", self.navBar)
+        for text, slot, tooltip in (("Application Settings", self.openGUI_Settings, "Edit application appearence"),
+                                    ("Same", self.openGUI_Settings, "Doing same")):
+            action = QtWidgets.QAction(text, self)
+            action.connect(SIGNAL("triggered()"), slot)
+            action.setToolTip(tooltip)
+            viewMenu.addAction(action)
+
         self.navBar.addMenu(fileMenu)
+        self.navBar.addMenu(viewMenu)
         self.setMenuBar(self.navBar)
 
     def setToolBox(self):
@@ -131,6 +138,14 @@ class mainWindow(QtWidgets.QMainWindow):
         toolBox.addWidget(shiftButton)
 
         self.addToolBar(toolBox)
+
+    def openGUI_Settings(self):
+        dialog = GUIsettings()
+        dialog.exec_()
+        if dialog.Accepted:
+            self.notifyBar.showMessage("-- Your settings have been updated!", 4000)
+
+
 
     def setNotificationBar(self):
         self.notifyBar = QtWidgets.QStatusBar()
