@@ -3,10 +3,10 @@ import functools
 from PySide2 import QtGui, QtCore, QtWidgets
 
 
-class Rectangle(QtWidgets.QGraphicsRectItem):
+class boxItem(QtWidgets.QGraphicsRectItem):
     def __init__(self, position, scene, lineWidth, joinStyle,
                  lineStyle=QtCore.Qt.SolidLine, rect=None, matrix=QtGui.QMatrix()):
-        super(Rectangle, self).__init__()
+        super(boxItem, self).__init__()
         self.setFlags(QtWidgets.QGraphicsItem.ItemIsSelectable
             | QtWidgets.QGraphicsItem.ItemIsMovable
             | QtWidgets.QGraphicsItem.ItemIsFocusable
@@ -46,7 +46,7 @@ class Rectangle(QtWidgets.QGraphicsRectItem):
     def mouseMoveEvent(self, event):
         if self.isSelected():
             if event.buttons() & QtCore.Qt.LeftButton:
-                super(Rectangle, self).mouseMoveEvent(event)
+                super(boxItem, self).mouseMoveEvent(event)
             elif event.buttons() & QtCore.Qt.MiddleButton:
                 self.rect = QtCore.QRectF(QtCore.QPoint(), event.pos()).normalized()
                 self.prepareGeometryChange()
@@ -59,7 +59,7 @@ class Rectangle(QtWidgets.QGraphicsRectItem):
             del list[0:length]
 
         if self.isSelected():
-            super(Rectangle, self).contextMenuEvent(event)
+            super(boxItem, self).contextMenuEvent(event)
 
             delta = 10
             r = self.boundingRect()
@@ -139,13 +139,9 @@ class Rectangle(QtWidgets.QGraphicsRectItem):
         global RAW
         RAW = True
 
-
-
-
 class pixmapItem(QtWidgets.QGraphicsPixmapItem):
     def __init__(self):
         pass
-
 
 class graphicsView(QtWidgets.QGraphicsView):
 

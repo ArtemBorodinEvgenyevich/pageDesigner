@@ -7,7 +7,7 @@ from PySide2.QtCore import SIGNAL
 
 from globals import *
 from .dialogs import settingsGUI as GUIsettings
-from .graphics import Rectangle as BoxItem
+from .graphics import boxItem as BoxItem
 from .graphics import graphicsView as GrahpicsView
 from .textItem import textItem as TextItem
 from .textItem import textItemDialog as TextItemDlg
@@ -145,15 +145,11 @@ class mainWindow(QtWidgets.QMainWindow):
         if dialog.Accepted:
             self.notifyBar.showMessage("-- Your settings have been updated!", 4000)
 
-
-
     def setNotificationBar(self):
         self.notifyBar = QtWidgets.QStatusBar()
         # self.notifyBar.showMessage("Test", 5000)
         self.notifyBar.setObjectName('notifyBar')
         self.setStatusBar(self.notifyBar)
-
-
 
     def addBorders(self):
         self.borders = []
@@ -164,19 +160,15 @@ class mainWindow(QtWidgets.QMainWindow):
             rect.adjusted(margin, margin, -margin, -margin), QtGui.QPen(),
             QtGui.QBrush(QtCore.Qt.white)))
 
-
     def removeBorders(self):
         while self.borders:
             item = self.borders.pop()
             self.scene.removeItem(item)
             del item
 
-
-
     def hideBorders(self):
         for i in range(len(self.borders)):
             self.borders[i].setVisible(False)
-
 
     def showBorders(self):
         for i in range(len(self.borders)):
@@ -210,14 +202,12 @@ class mainWindow(QtWidgets.QMainWindow):
                 self.prevPoint = point
         return self.view.mapToScene(point)
 
-
     def addText(self):
         dialog = TextItemDlg(position=self.position(),
                              scene=self.scene, parent=self)
         dialog.exec_()
         if dialog.Accepted:
             self.notifyBar.showMessage("-- Your text has been added!", 4000)
-
 
     def addBox(self):
         #midX = PAGE_SIZE[0] + PAGE_SIZE[0] / 2
@@ -238,7 +228,6 @@ class mainWindow(QtWidgets.QMainWindow):
         self.createPixmapItem(pixmap, self.position())
         self.notifyBar.showMessage("-- Your pixmap has been added!", 4000)
 
-
     def createPixmapItem(self, pixmap, position, matrix=QtGui.QMatrix()):
         item = QtWidgets.QGraphicsPixmapItem(pixmap)
         item.setFlags(QtWidgets.QGraphicsItem.ItemIsMovable |
@@ -251,7 +240,6 @@ class mainWindow(QtWidgets.QMainWindow):
         global RAW
         RAW = True
 
-
     def copy(self):
         item = self.selectedItem()
         if item is None:
@@ -262,7 +250,6 @@ class mainWindow(QtWidgets.QMainWindow):
         self.writeItemToStream(stream, item)
         self.notifyBar.showMessage("-- Your item has been copied!", 4000)
 
-
     def selectedItem(self):
         items = self.scene.selectedItems()
         if len(items) == 1:
@@ -272,7 +259,6 @@ class mainWindow(QtWidgets.QMainWindow):
             return None
         self.notifyBar.showMessage("-- No item to copy!", 4000)
         return None
-
 
     def cut(self):
         item = self.selectedItem()
@@ -285,7 +271,6 @@ class mainWindow(QtWidgets.QMainWindow):
         del item
         self.notifyBar.showMessage("-- Your item has been cut!", 4000)
 
-
     def paste(self):
         if self.copiedItems.isEmpty():
             return
@@ -293,7 +278,6 @@ class mainWindow(QtWidgets.QMainWindow):
         self.readItemsFromStream(stream, self.pasteOffset)
         self.pasteOffset += 5
         self.notifyBar.showMessage("-- Your item has been added!", 4000)
-
 
     def setAlignment(self, alignment):
         items = self.scene.selectedItems()
@@ -330,7 +314,6 @@ class mainWindow(QtWidgets.QMainWindow):
         global RAW
         RAW = True
 
-
     def delete(self):
         items = self.scene.selectedItems()
         if len(items) and QtWidgets.QMessageBox.question(self, "Page Designer - Delete",
@@ -346,8 +329,6 @@ class mainWindow(QtWidgets.QMainWindow):
         else:
             self.notifyBar.showMessage("-- No items to delete!", 4000)
 
-
-
     def printFile(self):
         dialog = QtPrintSupport.QPrintDialog(self.printer)
         if dialog.exec_():
@@ -359,7 +340,6 @@ class mainWindow(QtWidgets.QMainWindow):
             self.scene.render(painter)
             self.showBorders()
         self.notifyBar.showMessage("-- Your page has been successfully printed!", 4000)
-
 
     def open(self):
         self.checkIfSaved()
@@ -434,7 +414,6 @@ class mainWindow(QtWidgets.QMainWindow):
         global RAW
         RAW = False
 
-
     def writeItemToStream(self, stream, item):
         if isinstance(item, QtWidgets.QGraphicsTextItem):
             stream.writeQString("Text")
@@ -450,7 +429,6 @@ class mainWindow(QtWidgets.QMainWindow):
             stream.writeInt8(item.lineW)
             stream.writeInt16(item.join)
             stream.writeInt16(item.style)
-
 
     def readItemsFromStream(self, stream, offset=0):
         type = ""
