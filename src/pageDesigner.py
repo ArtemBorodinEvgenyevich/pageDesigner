@@ -219,9 +219,9 @@ class mainWindow(QtWidgets.QMainWindow):
 
     def addPixmap(self):
         path = QtCore.QFileInfo(self.filename).path() if self.filename else "."
-        fname, _ = QtWidgets.QFileDialog.getOpenFileName(self,
-                                                      "Page Designer - Add Pixmap", path,
-                                                      "Pixmap Files (*.bmp *.jpg *.jpeg *.png)")
+        fname, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Page Designer - Add Pixmap", path,
+                                                         "Pixmap Files (*.bmp *.jpg *.jpeg *.png)",
+                                                         options=QtWidgets.QFileDialog.DontUseNativeDialog)
         if not fname:
             return
         pixmap = QtGui.QPixmap(fname)
@@ -346,7 +346,8 @@ class mainWindow(QtWidgets.QMainWindow):
 
         path = QtCore.QFileInfo(self.filename).path() if self.filename else "."
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Page Designer - Open", path,
-                                                      "Page Designer Files (*.pgd)")
+                                                         "Page Designer Files (*.pgd)",
+                                                         options=QtWidgets.QFileDialog.DontUseNativeDialog)
         if not fname:
             return
         self.filename = fname
@@ -385,7 +386,8 @@ class mainWindow(QtWidgets.QMainWindow):
         if not self.filename:
             path = "."
             fname, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Page Designer -- Save As", path,
-                                                          "Page Designer Files (*.pgd)")
+                                                             "Page Designer Files (*.pgd)",
+                                                             options=QtWidgets.QFileDialog.DontUseNativeDialog)
             print(fname)
             if not fname:
                 return

@@ -7,7 +7,6 @@ from PySide2 import QtCore
 from PySide2 import QtWidgets
 
 from globals import CONFIG_EXIST
-from src.pageDesigner import mainWindow
 from stylesheets import breeze_resources
 
 path = os.path.dirname(os.path.abspath(__file__))
@@ -40,6 +39,8 @@ if __name__ == '__main__':
         }
         with open(os.path.join(os.pardir, "globalConfig.json"), "w") as settings:
             json.dump(data, settings, indent=4)
+
+    from src.pageDesigner import mainWindow
 
     #print(data["stylesheets"])
 
