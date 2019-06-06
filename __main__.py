@@ -8,6 +8,7 @@ from PySide2 import QtWidgets
 
 from globals import CONFIG_EXIST
 from src.pageDesigner import mainWindow
+from stylesheets import breeze_resources
 
 path = os.path.dirname(os.path.abspath(__file__))
 # print(path)

@@ -7,6 +7,6 @@
     "list-len": 10
   },
   "additional": {
-    "message-box": false
+    "message-box": true
   }
 }
