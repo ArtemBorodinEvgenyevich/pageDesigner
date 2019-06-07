@@ -6,11 +6,12 @@ import sys
 from PySide2 import QtCore
 from PySide2 import QtWidgets
 
-from globals import CONFIG_EXIST
+
+from globals import CONFIG_EXIST, APP_PATH
 from stylesheets import breeze_resources
 
-path = os.path.dirname(os.path.abspath(__file__))
-# print(path)
+print(os.path.join(APP_PATH, "globalConfig.json"))
+
 
 if __name__ == '__main__':
 
@@ -18,7 +19,7 @@ if __name__ == '__main__':
         if fnmatch.fnmatch(file, "globalConfig.json"):
             print("Config exist")
             CONFIG_EXIST = True
-            with open(path + "/globalConfig.json", "r") as settings:
+            with open(os.path.join(APP_PATH, "globalConfig.json"), "r") as settings:
                 data = json.load(settings)
             global CURRENT_CONFIG
             CURRENT_CONFIG = data
@@ -27,8 +28,8 @@ if __name__ == '__main__':
         print("No config")
         data = {
             "stylesheet": {
-                "file": "/stylesheets/light.qss",
-                "pixmap": "/stylesheets/styles_preview/light.png"
+                "file": "stylesheets/light.qss",
+                "pixmap": "stylesheets/styles_preview/light.png"
             },
             "undo-redo": {
                 "list-len": 10
@@ -37,7 +38,7 @@ if __name__ == '__main__':
                 "message-box": True
             }
         }
-        with open(os.path.join(os.pardir, "globalConfig.json"), "w") as settings:
+        with open(os.path.join(APP_PATH, "globalConfig.json"), "w") as settings:
             json.dump(data, settings, indent=4)
 
     from src.pageDesigner import mainWindow
@@ -49,12 +50,12 @@ if __name__ == '__main__':
     # style = QtWidgets.QStyleFactory.create('Fusion')
     # app.setStyle(style)
 
-    file = QtCore.QFile(path + data["stylesheet"]["file"])
+    file = QtCore.QFile(os.path.join(APP_PATH, data["stylesheet"]["file"]))
     file.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text)
     stream = QtCore.QTextStream(file)
     app.setStyleSheet(stream.readAll())
 
-    form = mainWindow(path)
+    form = mainWindow()
     rect = QtWidgets.QApplication.desktop().availableGeometry()
     form.resize(int(rect.width() * 0.6), int(rect.height() * 0.9))
     form.show()

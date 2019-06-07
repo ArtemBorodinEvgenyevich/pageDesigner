@@ -16,10 +16,8 @@ MAC = "qt_mac_set_native_menubar" in dir()
 
 
 class mainWindow(QtWidgets.QMainWindow):
-    def __init__(self, path):
+    def __init__(self):
         super(mainWindow, self).__init__()
-
-        self.absolutePath = path
 
         self.filename = ""
         self.copiedItems = QtCore.QByteArray()
@@ -92,12 +90,9 @@ class mainWindow(QtWidgets.QMainWindow):
         # Add geometry functions
         for text, slot, shortcut, \
             icon in (
-                ("Add Text", self.addText, "Ctrl+T",
-                 QtGui.QIcon(self.absolutePath + "/stylesheets/toolbar/addText.svg")),
-                ("Add Box", self.addBox, "Ctrl+B", QtGui.QIcon(self.absolutePath + "/stylesheets/toolbar/addBox.svg")),
-                (
-                        "Add Pixmap", self.addPixmap, "Ctrl+I",
-                        QtGui.QIcon(self.absolutePath + "/stylesheets/toolbar/addPixmap.svg"))):
+                ("Add Text", self.addText, "Ctrl+T", QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/toolbar/addText.svg"))),
+                ("Add Box", self.addBox, "Ctrl+B", QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/toolbar/addBox.svg"))),
+                ("Add Pixmap", self.addPixmap, "Ctrl+I", QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/toolbar/addPixmap.svg")))):
             action = QtWidgets.QAction(self)
             action.connect(SIGNAL("triggered()"), slot)
             action.setShortcut(shortcut)
@@ -108,11 +103,10 @@ class mainWindow(QtWidgets.QMainWindow):
 
         # Add editing functions
         for text, slot, shortcut, \
-            icon in (("Copy", self.copy, "Ctrl+C", QtGui.QIcon(self.absolutePath + "/stylesheets/toolbar/copy.svg")),
-                     ("Cut", self.cut, "Ctrl+X", QtGui.QIcon(self.absolutePath + "/stylesheets/toolbar/cut.svg")),
-                     ("Paste", self.paste, "Ctrl+V", QtGui.QIcon(self.absolutePath + "/stylesheets/toolbar/paste.svg")),
-                     ("Delete", self.delete, "Ctrl+D",
-                      QtGui.QIcon(self.absolutePath + "/stylesheets/toolbar/delete.svg"))):
+            icon in (("Copy", self.copy, "Ctrl+C", QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/toolbar/copy.svg"))),
+                     ("Cut", self.cut, "Ctrl+X", QtGui.QIcon(os.path.join(APP_PATH,  "stylesheets/toolbar/cut.svg"))),
+                     ("Paste", self.paste, "Ctrl+V", QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/toolbar/paste.svg"))),
+                     ("Delete", self.delete, "Ctrl+D", QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/toolbar/delete.svg")))):
             if slot is not None:
                 action = QtWidgets.QAction(self)
                 action.connect(SIGNAL("triggered()"), slot)
@@ -123,7 +117,7 @@ class mainWindow(QtWidgets.QMainWindow):
         toolBox.addSeparator()
 
         shiftButton = QtWidgets.QPushButton(toolBox)
-        shiftButton.setIcon(QtGui.QIcon(self.absolutePath + "/stylesheets/toolbar/shift.svg"))
+        shiftButton.setIcon(QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/toolbar/shift.svg")))
         menu = QtWidgets.QMenu(shiftButton)
         for text, arg in (("Shift Left", QtCore.Qt.AlignLeft),
                           ("Shift Right", QtCore.Qt.AlignRight),

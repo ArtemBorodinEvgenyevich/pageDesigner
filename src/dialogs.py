@@ -2,19 +2,17 @@ import json
 import os
 from functools import partial
 
+from globals import APP_PATH
 from PySide2 import QtCore, QtWidgets, QtGui
 
 
-def getConfigs(path):
-    with open(path + "/globalConfig.json", "r") as settings:
+
+def getConfigs():
+    with open(os.path.join(APP_PATH, "globalConfig.json"), "r") as settings:
         data = json.load(settings)
     return data
 
-
-parent_path = os.path.abspath(os.path.join(os.getcwd(), '..'))
-print(parent_path)
-
-data = getConfigs(parent_path)  # TODO
+data = getConfigs()
 
 
 class styleGUI(QtWidgets.QWidget):
@@ -29,8 +27,8 @@ class styleGUI(QtWidgets.QWidget):
         frame.setLayout(fLayout)
 
         for name, f_path, p_path in (
-                ("Breeze Light", "/stylesheets/light.qss", "/stylesheets/styles_preview/light.png"),
-                ("Breeze Dark", "/stylesheets/dark.qss", "/stylesheets/styles_preview/dark.png")):
+                ("Breeze Light", "stylesheets/light.qss", "stylesheets/styles_preview/light.png"),
+                ("Breeze Dark", "stylesheets/dark.qss", "stylesheets/styles_preview/dark.png")):
             wrapper = partial(self.setData, f_path, p_path)
             radio = QtWidgets.QRadioButton()
             radio.setText(name)
@@ -39,7 +37,7 @@ class styleGUI(QtWidgets.QWidget):
             fLayout.addWidget(radio)
 
         rect = QtWidgets.QApplication.desktop().availableGeometry()
-        self.pixmap = QtGui.QPixmap(parent_path + data["stylesheet"]["pixmap"])
+        self.pixmap = QtGui.QPixmap(os.path.join(APP_PATH, data["stylesheet"]["pixmap"]))
         self.preview = QtWidgets.QLabel()
         self.preview.setScaledContents(True)
         self.preview.setFixedSize(int(rect.width() * 0.3), int(rect.height() * 0.3))
@@ -52,10 +50,10 @@ class styleGUI(QtWidgets.QWidget):
         data["stylesheet"]["file"] = f_path
         data["stylesheet"]["pixmap"] = p_path
 
-        with open(os.path.join(os.pardir, "globalConfig.json"), "w") as f:
+        with open(os.path.join(APP_PATH, "globalConfig.json"), "w") as f:
             json.dump(data, f, indent=4)
 
-        self.pixmap = QtGui.QPixmap(parent_path + p_path)
+        self.pixmap = QtGui.QPixmap(os.path.join(APP_PATH, p_path))
         self.preview.setPixmap(self.pixmap)
         global CONFIG_CHANGED
         CONFIG_CHANGED = True
@@ -79,7 +77,7 @@ class warningDialog(QtWidgets.QMessageBox):
     def clickBox(self, state):
         if state == QtCore.Qt.Checked:
             data["additional"]["message-box"] = False
-            with open(os.path.join(parent_path, "globalConfig.json"), "w") as f:
+            with open(os.path.join(APP_PATH, "globalConfig.json"), "w") as f:
                 f = json.dump(data, f, indent=4)
         else:
             print("unchecked")
