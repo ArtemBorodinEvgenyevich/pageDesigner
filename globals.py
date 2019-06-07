@@ -2,7 +2,7 @@ import os
 
 PROGRAM_VERSION = "1.0.0"
 
-APP_PATH = os.path.dirname(os.getcwd())
+APP_PATH = os.getcwd()
 
 RAW = False
 CONFIG_EXIST = False

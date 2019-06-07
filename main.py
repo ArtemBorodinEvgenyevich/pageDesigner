@@ -10,7 +10,7 @@ from PySide2 import QtWidgets
 from globals import CONFIG_EXIST, APP_PATH
 from stylesheets import breeze_resources
 
-print(os.path.join(APP_PATH, "globalConfig.json"))
+print(os.getcwd())
 
 
 if __name__ == '__main__':
