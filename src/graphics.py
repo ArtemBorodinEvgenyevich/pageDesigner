@@ -1,6 +1,7 @@
 import functools
 
 from PySide2 import QtGui, QtCore, QtWidgets
+import math
 
 
 class boxItem(QtWidgets.QGraphicsRectItem):
@@ -8,10 +9,10 @@ class boxItem(QtWidgets.QGraphicsRectItem):
                  lineStyle=QtCore.Qt.SolidLine, rect=None, matrix=QtGui.QMatrix()):
         super(boxItem, self).__init__()
         self.setFlags(QtWidgets.QGraphicsItem.ItemIsSelectable
-            | QtWidgets.QGraphicsItem.ItemIsMovable
-            | QtWidgets.QGraphicsItem.ItemIsFocusable
-            | QtWidgets.QGraphicsItem.ItemSendsGeometryChanges
-            | QtWidgets.QGraphicsItem.ItemSendsScenePositionChanges)
+                      | QtWidgets.QGraphicsItem.ItemIsMovable
+                      | QtWidgets.QGraphicsItem.ItemIsFocusable
+                      | QtWidgets.QGraphicsItem.ItemSendsGeometryChanges
+                      | QtWidgets.QGraphicsItem.ItemSendsScenePositionChanges)
 
         if rect is None:
             rect = QtCore.QRectF(0, 0, 200, 200)
@@ -25,14 +26,8 @@ class boxItem(QtWidgets.QGraphicsRectItem):
         self.setMatrix(matrix)
         self.setRect(self.rect)
 
-        scene.clearSelection()
-        scene.addItem(self)
         self.setSelected(True)
         self.setFocus()
-        global RAW
-        RAW = True
-
-
 
     def itemChange(self, change, variant):
         if change != QtWidgets.QGraphicsRectItem.ItemSelectedChange:
@@ -51,7 +46,6 @@ class boxItem(QtWidgets.QGraphicsRectItem):
                 self.rect = QtCore.QRectF(QtCore.QPoint(), event.pos()).normalized()
                 self.prepareGeometryChange()
                 self.setRect(self.rect)
-
 
     def contextMenuEvent(self, event):
         def clearList(list):
@@ -99,7 +93,6 @@ class boxItem(QtWidgets.QGraphicsRectItem):
 
             menu.exec_(event.screenPos())
 
-
     def paint(self, painter, option, widget):
         pen = QtGui.QPen(self.style)
         pen.setColor(QtCore.Qt.black)
@@ -119,7 +112,6 @@ class boxItem(QtWidgets.QGraphicsRectItem):
 
         painter.drawRect(self.boundingRect())
 
-
     def setStyle(self, style):
         self.style = style
         self.update()
@@ -133,21 +125,36 @@ class boxItem(QtWidgets.QGraphicsRectItem):
         RAW = True
 
     def setJoin(self, style):
-
         self.join = style
         self.update()
         global RAW
         RAW = True
 
+
 class pixmapItem(QtWidgets.QGraphicsPixmapItem):
-    def __init__(self):
-        pass
+    def __init__(self, position, pixmap, matrix=QtGui.QMatrix()):
+        super(pixmapItem, self).__init__()
+
+        self.setFlags(QtWidgets.QGraphicsItem.ItemIsMovable |
+                      QtWidgets.QGraphicsItem.ItemIsSelectable |
+                      QtWidgets.QGraphicsItem.ItemIsFocusable |
+                      QtWidgets.QGraphicsItem.ItemSendsGeometryChanges |
+                      QtWidgets.QGraphicsItem.ItemSendsScenePositionChanges)
+
+        self.setMatrix(matrix)
+        self.setPos(position)
+        self.setPixmap(pixmap)
+
+        self.setSelected(True)
+        self.setFocus()
+
 
 class graphicsView(QtWidgets.QGraphicsView):
 
-    def __init__(self, scene, parent=None):
+    def __init__(self, scene, snap, parent=None):
         super(graphicsView, self).__init__(parent)
         self.scene = scene
+        self.snap = snap  # TODO
 
         self.setObjectName("graphicsView")
 
@@ -162,13 +169,11 @@ class graphicsView(QtWidgets.QGraphicsView):
 
         self.setScene(self.scene)
 
-
     def wheelEvent(self, event):
         factor = 1.41 ** (-event.delta() / 240)
         self.scale(factor, factor)
         global RAW
         RAW = True
-
 
     def mousePressEvent(self, event):
         if event.button() & QtCore.Qt.RightButton:
@@ -176,14 +181,8 @@ class graphicsView(QtWidgets.QGraphicsView):
         else:
             super(graphicsView, self).mousePressEvent(event)
 
-
     def mouseReleaseEvent(self, event):
         if event.button() & QtCore.Qt.RightButton:
             self.setDragMode(QtWidgets.QGraphicsView.RubberBandDrag)
         else:
             super(graphicsView, self).mouseReleaseEvent(event)
-
-
-
-
-

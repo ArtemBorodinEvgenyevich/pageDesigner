@@ -12,10 +12,9 @@ from stylesheets import breeze_resources
 
 print(os.getcwd())
 
-
 if __name__ == '__main__':
 
-    for file in os.listdir(os.pardir):
+    for file in os.listdir(APP_PATH):
         if fnmatch.fnmatch(file, "globalConfig.json"):
             print("Config exist")
             CONFIG_EXIST = True
@@ -43,12 +42,8 @@ if __name__ == '__main__':
 
     from src.pageDesigner import mainWindow
 
-    #print(data["stylesheets"])
 
     app = QtWidgets.QApplication(sys.argv)
-
-    # style = QtWidgets.QStyleFactory.create('Fusion')
-    # app.setStyle(style)
 
     file = QtCore.QFile(os.path.join(APP_PATH, data["stylesheet"]["file"]))
     file.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text)

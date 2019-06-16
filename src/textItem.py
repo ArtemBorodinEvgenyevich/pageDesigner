@@ -34,8 +34,6 @@ class textItem(QtWidgets.QGraphicsTextItem):
         dialog.exec_()
 
 
-
-
 class textItemDialog(QtWidgets.QDialog):
     def __init__(self, item=None, position=None, scene=None, parent=None):
         super(textItemDialog, self).__init__(parent)

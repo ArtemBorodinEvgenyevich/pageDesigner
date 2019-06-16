@@ -5,8 +5,8 @@ PROGRAM_VERSION = "1.0.0"
 APP_PATH = os.getcwd()
 
 RAW = False
+SNAP = False
 CONFIG_EXIST = False
-# CURRENT_CONFIG = ""
 CONFIG_CHANGED = False
 
 PAGE_SIZE = (595, 842)
