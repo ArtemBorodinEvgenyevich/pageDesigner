@@ -1,11 +1,7 @@
-import random
+from PySide2 import QtWidgets, QtPrintSupport
 
-from PySide2 import QtCore, QtWidgets, QtPrintSupport, QtGui
-
-from globals import *
-from .graphics import graphicsView as GrahpicsView
-from .widgets.mainWindow import toolBox, menuBar, statusBar
 from .actions.actions import actionSelectAll
+from .widgets.mainWindow import toolBox, menuBar, statusBar, centralWidget
 
 
 class mainWindow(QtWidgets.QMainWindow):
@@ -14,25 +10,18 @@ class mainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Page Designer --Alpha--")
         self.setObjectName("mainWindow")
 
-        self.filename = ""
-        self.copiedItems = QtCore.QByteArray()
-        self.pasteOffset = 5
-        self.prevPoint = QtCore.QPoint()
-        self.addOffset = 5
-        self.borders = []
 
         self.printer = QtPrintSupport.QPrinter(QtPrintSupport.QPrinter.HighResolution)
         self.printer.setPageSize(QtPrintSupport.QPrinter.A4)
 
-        self.scene = QtWidgets.QGraphicsScene(self)
-        self.scene.setSceneRect(0, 0, PAGE_SIZE[0], PAGE_SIZE[1])  # TODO different sizes
-        self.view = GrahpicsView(self.scene, self)
+        self.centralWidget = centralWidget(self.printer, self)
 
-        self.setCentralWidget(self.view)
+        self.setCentralWidget(self.centralWidget)
+
 
         # Init widgets
-        self.toolBox = toolBox(self.scene, self.view, self.position, self)
-        self.menuBar = menuBar(self.scene, self)
+        self.toolBox = toolBox(self.centralWidget.scene, self.centralWidget.view, self.centralWidget.position, self.centralWidget)
+        self.menuBar = menuBar(self.centralWidget.scene, self.centralWidget)
         self.statusBar = statusBar()
 
         self.setMenuBar(self.menuBar)
@@ -40,31 +29,10 @@ class mainWindow(QtWidgets.QMainWindow):
         self.setStatusBar(self.statusBar)
 
         # Init actions not listed in toolBox
-        act_selectAll = actionSelectAll(self.scene, self)
+        act_selectAll = actionSelectAll(self.centralWidget.scene, self.centralWidget)
+        #act_closeOpenPBox = actionOpenClosePropertyBox(self.propBox, self)
+
         self.addAction(act_selectAll)
-
         # add page borders to the viewport
-        self.addBorders()
+        self.centralWidget.addBorders()
 
-    def position(self):
-        point = self.mapFromGlobal(QtGui.QCursor.pos())
-        if not self.view.geometry().contains(point):
-            coord = random.randint(36, 144)
-            point = QtCore.QPoint(coord, coord)
-        else:
-            if point == self.prevPoint:
-                point += QtCore.QPoint(self.addOffset, self.addOffset)
-                self.addOffset += 5
-            else:
-                self.addOffset = 5
-                self.prevPoint = point
-        return self.view.mapToScene(point)
-
-    def addBorders(self):
-        self.borders = []
-        rect = QtCore.QRectF(0, 0, PAGE_SIZE[0], PAGE_SIZE[1])
-        self.borders.append(self.scene.addRect(rect, QtGui.QPen(), QtGui.QBrush(QtCore.Qt.lightGray)))
-        margin = 5.25 * POINT_SIZE
-        self.borders.append(self.scene.addRect(
-            rect.adjusted(margin, margin, -margin, -margin), QtGui.QPen(),
-            QtGui.QBrush(QtCore.Qt.white)))

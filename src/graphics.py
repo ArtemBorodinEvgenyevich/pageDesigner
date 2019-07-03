@@ -1,13 +1,74 @@
 import functools
 
 from PySide2 import QtGui, QtCore, QtWidgets
-import math
+
+
+class graphicsView(QtWidgets.QGraphicsView):
+    currentItemChanged = QtCore.Signal(QtWidgets.QGraphicsItem)
+
+    def __init__(self, scene, snap, parent=None):
+        super(graphicsView, self).__init__(parent)
+        self.scene = scene
+        self.snap = snap  # TODO
+
+        #self._currentItem = None
+
+        #self.setObjectName("graphicsView")
+
+        self.setDragMode(QtWidgets.QGraphicsView.RubberBandDrag)
+        self.setRenderHint(QtGui.QPainter.Antialiasing)
+        self.setRenderHint(QtGui.QPainter.TextAntialiasing)
+        self.setViewportUpdateMode(QtWidgets.QGraphicsView.BoundingRectViewportUpdate)
+        self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
+        self.setResizeAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+
+        self.setScene(self.scene)
+
+    def wheelEvent(self, event):
+        factor = 1.41 ** (-event.delta() / 240)
+        self.scale(factor, factor)
+        global RAW
+        RAW = True
+
+    def mousePressEvent(self, event):
+        super(graphicsView, self).mousePressEvent(event)
+        if event.button() & QtCore.Qt.RightButton:
+            self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
+
+        it = self.itemAt(event.pos())
+        if it is not None and hasattr(it, "_canEdit"):
+            self.currentItem = it
+
+    def mouseReleaseEvent(self, event):
+        super(graphicsView, self).mouseReleaseEvent(event)
+        if event.button() & QtCore.Qt.RightButton:
+            self.setDragMode(QtWidgets.QGraphicsView.RubberBandDrag)
+
+    @property
+    def currentItem(self):
+        if not hasattr(self, "_currentItem"):
+            self._currentItem = None
+        return self._currentItem
+
+    @currentItem.setter
+    def currentItem(self, it):
+        if self.currentItem != it:
+            self._currentItem = it
+            self.currentItemChanged.emit(it)
 
 
 class boxItem(QtWidgets.QGraphicsRectItem):
-    def __init__(self, position, scene, lineWidth, joinStyle,
+    def __init__(self, position, rotation, scale, lineWidth, joinStyle,
                  lineStyle=QtCore.Qt.SolidLine, rect=None, matrix=QtGui.QMatrix()):
         super(boxItem, self).__init__()
+
+        self._canEdit = "true"
+
+        self.setRotation(rotation)
+        self.setScale(scale)
+
         self.setFlags(QtWidgets.QGraphicsItem.ItemIsSelectable
                       | QtWidgets.QGraphicsItem.ItemIsMovable
                       | QtWidgets.QGraphicsItem.ItemIsFocusable
@@ -26,6 +87,13 @@ class boxItem(QtWidgets.QGraphicsRectItem):
         self.setMatrix(matrix)
         self.setRect(self.rect)
 
+        self.br = self.boundingRect()
+        self.setTransformOriginPoint(
+            QtCore.QPointF(self.br.width() / 2, self.br.height() / 2)
+        )
+
+        self.update()
+
         self.setSelected(True)
         self.setFocus()
 
@@ -34,6 +102,7 @@ class boxItem(QtWidgets.QGraphicsRectItem):
             global RAW
             RAW = True
         return QtWidgets.QGraphicsRectItem.itemChange(self, change, variant)
+
 
     def parentWidget(self):
         return self.scene().views()[0]
@@ -48,10 +117,6 @@ class boxItem(QtWidgets.QGraphicsRectItem):
                 self.setRect(self.rect)
 
     def contextMenuEvent(self, event):
-        def clearList(list):
-            length = len(list)
-            del list[0:length]
-
         if self.isSelected():
             super(boxItem, self).contextMenuEvent(event)
 
@@ -132,57 +197,32 @@ class boxItem(QtWidgets.QGraphicsRectItem):
 
 
 class pixmapItem(QtWidgets.QGraphicsPixmapItem):
-    def __init__(self, position, pixmap, matrix=QtGui.QMatrix()):
+    def __init__(self, position, rotation, scale, pixmap, matrix=QtGui.QMatrix()):
         super(pixmapItem, self).__init__()
+
+        self._canEdit = True
+
+        self.setRotation(rotation)
+        self.setScale(scale)
 
         self.setFlags(QtWidgets.QGraphicsItem.ItemIsMovable |
                       QtWidgets.QGraphicsItem.ItemIsSelectable |
                       QtWidgets.QGraphicsItem.ItemIsFocusable |
-                      QtWidgets.QGraphicsItem.ItemSendsGeometryChanges |
-                      QtWidgets.QGraphicsItem.ItemSendsScenePositionChanges)
+                      QtWidgets.QGraphicsItem.ItemSendsGeometryChanges)
+        self.setTransformationMode(QtCore.Qt.SmoothTransformation)
 
         self.setMatrix(matrix)
         self.setPos(position)
         self.setPixmap(pixmap)
 
+        pixmap = self.pixmap()
+        self.setTransformOriginPoint(
+            QtCore.QPointF(pixmap.width() / 2, pixmap.height() / 2)
+        )
+
+        self.update()
+
         self.setSelected(True)
         self.setFocus()
 
 
-class graphicsView(QtWidgets.QGraphicsView):
-
-    def __init__(self, scene, snap, parent=None):
-        super(graphicsView, self).__init__(parent)
-        self.scene = scene
-        self.snap = snap  # TODO
-
-        self.setObjectName("graphicsView")
-
-        self.setDragMode(QtWidgets.QGraphicsView.RubberBandDrag)
-        self.setRenderHint(QtGui.QPainter.Antialiasing)
-        self.setRenderHint(QtGui.QPainter.TextAntialiasing)
-        self.setViewportUpdateMode(QtWidgets.QGraphicsView.BoundingRectViewportUpdate)
-        self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
-        self.setResizeAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
-        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-
-        self.setScene(self.scene)
-
-    def wheelEvent(self, event):
-        factor = 1.41 ** (-event.delta() / 240)
-        self.scale(factor, factor)
-        global RAW
-        RAW = True
-
-    def mousePressEvent(self, event):
-        if event.button() & QtCore.Qt.RightButton:
-            self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
-        else:
-            super(graphicsView, self).mousePressEvent(event)
-
-    def mouseReleaseEvent(self, event):
-        if event.button() & QtCore.Qt.RightButton:
-            self.setDragMode(QtWidgets.QGraphicsView.RubberBandDrag)
-        else:
-            super(graphicsView, self).mouseReleaseEvent(event)

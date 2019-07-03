@@ -2,9 +2,9 @@ import json
 import os
 from functools import partial
 
-from globals import APP_PATH
 from PySide2 import QtCore, QtWidgets, QtGui
 
+from globals import APP_PATH
 
 
 def getConfigs():

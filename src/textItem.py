@@ -1,24 +1,39 @@
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide2 import QtWidgets, QtCore, QtGui
 from PySide2.QtCore import SIGNAL
 
-from globals import *
+from globals import POINT_SIZE
 
 
 class textItem(QtWidgets.QGraphicsTextItem):
-    def __init__(self, text, position, scene,
+    def __init__(self, text, position, rotation, scale, scene,
                  font=QtGui.QFont("Times", POINT_SIZE), matrix=QtGui.QMatrix()):
         super(textItem, self).__init__(text)
 
+        self._canEdit = True
+
+        self.setRotation(rotation)
+        self.setScale(scale)
+
         self.setFlags(QtWidgets.QGraphicsItem.ItemIsSelectable |
                       QtWidgets.QGraphicsItem.ItemIsMovable)
+
         self.setFont(font)
         self.setPos(position)
         self.setMatrix(matrix)
+
+        br = self.boundingRect()
+        self.setTransformOriginPoint(
+            QtCore.QPointF(br.width() / 2, br.height() / 2)
+        )
+
         scene.clearSelection()
         scene.addItem(self)
+
         self.setSelected(True)
         global RAW
         RAW = True
+
+        self.update()
 
     def parentWidget(self):
         return self.scene().views()[0]
@@ -32,6 +47,7 @@ class textItem(QtWidgets.QGraphicsTextItem):
     def mouseDoubleClickEvent(self, event):
         dialog = textItemDialog(self, self.parentWidget())
         dialog.exec_()
+
 
 
 class textItemDialog(QtWidgets.QDialog):
@@ -97,11 +113,17 @@ class textItemDialog(QtWidgets.QDialog):
 
     def accept(self):
         if self.item is None:
-            self.item = textItem("", self.position, self.scene)
+            self.item = textItem("", self.position, 0, 1, self.scene)
         font = self.fontComboBox.currentFont()
         font.setPointSize(self.fontSpinBox.value())
         self.item.setFont(font)
         self.item.setPlainText(self.editor.toPlainText())
+
+        br = self.item.boundingRect()
+        self.item.setTransformOriginPoint(
+            QtCore.QPointF(br.width() / 2, br.height() / 2)
+        )
+
         self.item.update()
         global RAW
         RAW = True

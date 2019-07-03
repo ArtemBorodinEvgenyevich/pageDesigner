@@ -1,24 +1,33 @@
+import os
+import sys
+
 from PySide2 import QtWidgets, QtCore, QtGui, QtPrintSupport
 from PySide2.QtCore import SIGNAL
-from src.graphics import boxItem, pixmapItem
-from src.textItem import textItemDialog, textItem
-from src.dialogs import settingsGUI
+
 from globals import APP_PATH, MAGICK_NUM, FILE_VERSION, PAGE_SIZE, POINT_SIZE
-import os, sys
+from src.dialogs import settingsGUI
+from src.graphics import boxItem, pixmapItem
+from src.textItem import textItem, textItemDialog
 
 
 def writeItemToBuffer(stream, items):
     for item in items:
         if isinstance(item, QtWidgets.QGraphicsTextItem):
             stream.writeQString("Text")
+            stream.writeFloat(item.rotation())
+            stream.writeFloat(item.scale())
             stream << item.pos() << item.matrix()
             stream.writeQString(item.toPlainText())
             stream << item.font()
         elif isinstance(item, QtWidgets.QGraphicsPixmapItem):
             stream.writeQString("Pixmap")
+            stream.writeFloat(item.rotation())
+            stream.writeFloat(item.scale())
             stream << item.pos() << item.matrix() << item.pixmap()
         elif isinstance(item, boxItem):
             stream.writeQString("Box")
+            stream.writeFloat(item.rotation())
+            stream.writeFloat(item.scale())
             stream << item.pos() << item.matrix() << item.rect
             stream.writeInt8(item.lineW)
             stream.writeInt16(item.join)
@@ -31,37 +40,43 @@ def readItemsFromBuffer(stream, scene, parent, offset=0, flag=None):
         position = QtCore.QPointF()
         matrix = QtGui.QMatrix()
 
+
         for i in parent.copiedItems:
             type = stream.readQString()
+            rotation = float(stream.readFloat())
+            scale = float(stream.readFloat())
             stream >> position >> matrix
 
             if type == "Text":
                 text = stream.readQString()
                 font = QtGui.QFont()
                 stream >> font
-                textItem(text, position, scene, font, matrix)
+                textItem(text, position, rotation, scale, scene, font, matrix)
             elif type == "Box":
                 rect = QtCore.QRectF()
                 stream >> rect
                 width = int(stream.readInt8())
                 join = QtCore.Qt.PenJoinStyle(stream.readInt16())
                 style = QtCore.Qt.PenStyle(stream.readInt16())
-                box = boxItem(position, scene, width, join, style, rect, matrix)
+                box = boxItem(position, rotation, scale, width, join, style, rect, matrix)
                 scene.clearSelection()
                 scene.addItem(box)
             elif type == "Pixmap":
                 image = QtGui.QPixmap()
                 stream >> image
-                pixmap = pixmapItem(position, image)
+                pixmap = pixmapItem(position, rotation, scale, image)
                 scene.addItem(pixmap)
             scene.clearSelection()
         if offset:
             position += QtCore.QPointF(offset, offset)
+
     elif flag == "open":
         type = ""
         position = QtCore.QPointF()
         matrix = QtGui.QMatrix()
         type = stream.readQString()
+        rotation = float(stream.readFloat())
+        scale = float(stream.readFloat())
         stream >> position >> matrix
 
         if offset:
@@ -70,20 +85,20 @@ def readItemsFromBuffer(stream, scene, parent, offset=0, flag=None):
             text = stream.readQString()
             font = QtGui.QFont()
             stream >> font
-            textItem(text, position, scene, font, matrix)
+            textItem(text, position, rotation, scale, scene, font, matrix)
         elif type == "Box":
             rect = QtCore.QRectF()
             stream >> rect
             width = int(stream.readInt8())
             join = QtCore.Qt.PenJoinStyle(stream.readInt16())
             style = QtCore.Qt.PenStyle(stream.readInt16())
-            box = boxItem(position, scene, width, join, style, rect, matrix)
+            box = boxItem(position, rotation, scale, width, join, style, rect, matrix)
             scene.clearSelection()
             scene.addItem(box)
         elif type == "Pixmap":
             image = QtGui.QPixmap()
             stream >> image
-            pixmap = pixmapItem(position, image)
+            pixmap = pixmapItem(position, rotation, scale, image)
             scene.addItem(pixmap)
         scene.clearSelection()
 
@@ -279,7 +294,7 @@ class actionCreateBox(QtWidgets.QAction):
         self.connect(SIGNAL("triggered()"), self.addBox)
 
     def addBox(self):
-        box = boxItem(self.a_pos(), self.p_scene, 2, QtCore.Qt.BevelJoin, QtCore.Qt.SolidLine)
+        box = boxItem(self.a_pos(), 0, 1, 2, QtCore.Qt.BevelJoin, QtCore.Qt.SolidLine)
         self.p_scene.clearSelection()
         self.p_scene.addItem(box)
         global RAW
@@ -324,7 +339,7 @@ class actionCreatePixmapItem(QtWidgets.QAction):
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(self.w_parent, "Page Designer - Add Pixmap", path,
                                                          "Pixmap Files (*.bmp *.jpg *.jpeg *.png)",
                                                          options=QtWidgets.QFileDialog.DontUseNativeDialog)
-        pixmap = pixmapItem(self.a_pos(), fname)
+        pixmap = pixmapItem(self.a_pos(), 0, 1, fname)
         self.p_scene.clearSelection()
         self.p_scene.addItem(pixmap)
         global RAW
@@ -483,3 +498,17 @@ class actionOpenSettings_GUI(QtWidgets.QAction):
     def openSetting_GUI(self):
         dialog = settingsGUI()
         dialog.exec_()
+
+
+class actionOpenClosePropertyBox(QtWidgets.QAction):
+    def __init__(self, widget, parent):
+        super(actionOpenClosePropertyBox, self).__init__(parent)
+
+        self.w_parent = parent
+        self.a_widget = widget
+
+        self.setShortcut("Ctrl+N")
+        self.connect(SIGNAL("triggered()"), self.openClose)
+
+    def openClose(self):
+        self.a_widget.closeOpenWidget()
