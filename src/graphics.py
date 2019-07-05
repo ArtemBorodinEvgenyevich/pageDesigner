@@ -1,5 +1,5 @@
 import functools
-
+from globals import PAGE_SIZE
 from PySide2 import QtGui, QtCore, QtWidgets
 
 
@@ -10,10 +10,6 @@ class graphicsView(QtWidgets.QGraphicsView):
         super(graphicsView, self).__init__(parent)
         self.scene = scene
         self.snap = snap  # TODO
-
-        #self._currentItem = None
-
-        #self.setObjectName("graphicsView")
 
         self.setDragMode(QtWidgets.QGraphicsView.RubberBandDrag)
         self.setRenderHint(QtGui.QPainter.Antialiasing)
@@ -59,12 +55,71 @@ class graphicsView(QtWidgets.QGraphicsView):
             self.currentItemChanged.emit(it)
 
 
+class graphicsScene(QtWidgets.QGraphicsScene):
+    def __init__(self):
+        super(graphicsScene, self).__init__()
+        self.gridDensity_X = 50
+        self.gridDensity_Y = 50
+
+        self.lines = []
+
+        self.setSceneRect(0, 0, PAGE_SIZE[0], PAGE_SIZE[1])
+        self.setItemIndexMethod(QtWidgets.QGraphicsScene.NoIndex)
+
+        self.state = True
+
+    def snap(self):
+        if self.state is True:
+            gr = self.sceneRect().toRect()
+            start_x = gr.left() + self.gridDensity_X - (gr.left() % self.gridDensity_X)
+            start_y = gr.top() + self.gridDensity_Y - (gr.top() % self.gridDensity_Y)
+
+            for item in self.items():
+                item.a_state = True
+
+            for x in range(start_x, gr.right(), self.gridDensity_X):
+                line = self.addLine(x, gr.top(), x, gr.bottom())
+                line.setOpacity(0.3)
+                line.setZValue(-1)
+                self.lines.append(line)
+
+            for y in range(start_y, gr.bottom(), self.gridDensity_Y):
+                line = self.addLine(gr.left(), y, gr.right(), y)
+                line.setOpacity(0.3)
+                line.setZValue(-1)
+                self.lines.append(line)
+
+            for item in self.items():
+                item.update()
+
+            self.state = False
+        else:
+            for item in self.items():
+                item.a_state = False
+                item.update()
+
+            for line in self.lines:
+                self.removeItem(line)
+            del self.lines[:]
+
+            self.state = True
+
+    def setGridOpacity(self, value):
+        for line in self.lines:
+            line.setOpacity(value)
+
+
 class boxItem(QtWidgets.QGraphicsRectItem):
     def __init__(self, position, rotation, scale, lineWidth, joinStyle,
-                 lineStyle=QtCore.Qt.SolidLine, rect=None, matrix=QtGui.QMatrix()):
+                 lineStyle=QtCore.Qt.SolidLine, rect=None, matrix=QtGui.QMatrix(), scene=None, snap=None):
         super(boxItem, self).__init__()
 
-        self._canEdit = "true"
+        self._canEdit = True
+
+        self.p_scene = scene
+        self.a_state = False
+        if snap.isChecked():
+            self.a_state = True
 
         self.setRotation(rotation)
         self.setScale(scale)
@@ -103,6 +158,11 @@ class boxItem(QtWidgets.QGraphicsRectItem):
             RAW = True
         return QtWidgets.QGraphicsRectItem.itemChange(self, change, variant)
 
+    def setGridIntersection(self, scene, state):
+        if state is True:
+            grid_x = int(self.pos().x() / scene.gridDensity_X)
+            grid_y = int(self.pos().y() / scene.gridDensity_Y)
+            self.setPos(grid_x * scene.gridDensity_X, grid_y * scene.gridDensity_Y)
 
     def parentWidget(self):
         return self.scene().views()[0]
@@ -115,6 +175,8 @@ class boxItem(QtWidgets.QGraphicsRectItem):
                 self.rect = QtCore.QRectF(QtCore.QPoint(), event.pos()).normalized()
                 self.prepareGeometryChange()
                 self.setRect(self.rect)
+
+            self.setGridIntersection(self.p_scene, self.a_state)
 
     def contextMenuEvent(self, event):
         if self.isSelected():
@@ -197,10 +259,15 @@ class boxItem(QtWidgets.QGraphicsRectItem):
 
 
 class pixmapItem(QtWidgets.QGraphicsPixmapItem):
-    def __init__(self, position, rotation, scale, pixmap, matrix=QtGui.QMatrix()):
+    def __init__(self, position, rotation, scale, pixmap, matrix=QtGui.QMatrix(), scene=None, snap=None):
         super(pixmapItem, self).__init__()
 
         self._canEdit = True
+
+        self.p_scene = scene
+        self.a_state = False
+        if snap.isChecked():
+            self.a_state = True
 
         self.setRotation(rotation)
         self.setScale(scale)
@@ -226,3 +293,15 @@ class pixmapItem(QtWidgets.QGraphicsPixmapItem):
         self.setFocus()
 
 
+
+    def setGridIntersection(self, scene, state):
+        if state is True:
+            grid_x = int(self.pos().x() / scene.gridDensity_X)
+            grid_y = int(self.pos().y() / scene.gridDensity_Y)
+            self.setPos(grid_x * scene.gridDensity_X, grid_y * scene.gridDensity_Y)
+
+    def mouseMoveEvent(self, event):
+        if self.isSelected():
+            if event.buttons() & QtCore.Qt.LeftButton:
+                super(pixmapItem, self).mouseMoveEvent(event)
+            self.setGridIntersection(self.p_scene, self.a_state)

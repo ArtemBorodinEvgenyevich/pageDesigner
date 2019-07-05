@@ -21,7 +21,7 @@ class mainWindow(QtWidgets.QMainWindow):
 
         # Init widgets
         self.toolBox = toolBox(self.centralWidget.scene, self.centralWidget.view, self.centralWidget.position, self.centralWidget)
-        self.menuBar = menuBar(self.centralWidget.scene, self.centralWidget)
+        self.menuBar = menuBar(self.centralWidget.scene, self.centralWidget, self.toolBox.snap)
         self.statusBar = statusBar()
 
         self.setMenuBar(self.menuBar)

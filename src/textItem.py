@@ -6,10 +6,17 @@ from globals import POINT_SIZE
 
 class textItem(QtWidgets.QGraphicsTextItem):
     def __init__(self, text, position, rotation, scale, scene,
-                 font=QtGui.QFont("Times", POINT_SIZE), matrix=QtGui.QMatrix()):
+                 font=QtGui.QFont("Times", POINT_SIZE), matrix=QtGui.QMatrix(), snap=None):
         super(textItem, self).__init__(text)
 
         self._canEdit = True
+
+        self.p_scene = scene
+        self.a_state = False
+        print(snap)
+        if snap.isChecked():
+            self.a_state = True
+
 
         self.setRotation(rotation)
         self.setScale(scale)
@@ -26,14 +33,16 @@ class textItem(QtWidgets.QGraphicsTextItem):
             QtCore.QPointF(br.width() / 2, br.height() / 2)
         )
 
-        scene.clearSelection()
-        scene.addItem(self)
+        self.p_scene.clearSelection()
+        self.p_scene.addItem(self)
 
         self.setSelected(True)
         global RAW
         RAW = True
 
         self.update()
+
+        self.setGridIntersection(scene, snap)
 
     def parentWidget(self):
         return self.scene().views()[0]
@@ -44,6 +53,18 @@ class textItem(QtWidgets.QGraphicsTextItem):
             RAW = True
         return QtWidgets.QGraphicsTextItem.itemChange(self, change, variant)
 
+    def setGridIntersection(self, scene, state):
+        if state is True:
+            grid_x = int(self.pos().x() / scene.gridDensity_X)
+            grid_y = int(self.pos().y() / scene.gridDensity_Y)
+            self.setPos(grid_x * scene.gridDensity_X, grid_y * scene.gridDensity_Y)
+
+    def mouseMoveEvent(self, event):
+        if self.isSelected():
+            if event.buttons() & QtCore.Qt.LeftButton:
+                super(textItem, self).mouseMoveEvent(event)
+            self.setGridIntersection(self.p_scene, self.a_state)
+
     def mouseDoubleClickEvent(self, event):
         dialog = textItemDialog(self, self.parentWidget())
         dialog.exec_()
@@ -51,12 +72,14 @@ class textItem(QtWidgets.QGraphicsTextItem):
 
 
 class textItemDialog(QtWidgets.QDialog):
-    def __init__(self, item=None, position=None, scene=None, parent=None):
+    def __init__(self, item=None, position=None, scene=None, parent=None, snap=None):
         super(textItemDialog, self).__init__(parent)
 
         self.item = item
         self.position = position
         self.scene = scene
+        self.a_snap = snap
+        print(self.a_snap)
 
         self.editor = QtWidgets.QTextEdit()
         self.editor.setAcceptRichText(False)
@@ -113,7 +136,7 @@ class textItemDialog(QtWidgets.QDialog):
 
     def accept(self):
         if self.item is None:
-            self.item = textItem("", self.position, 0, 1, self.scene)
+            self.item = textItem("", self.position, 0, 1, self.scene, snap=self.a_snap)
         font = self.fontComboBox.currentFont()
         font.setPointSize(self.fontSpinBox.value())
         self.item.setFont(font)

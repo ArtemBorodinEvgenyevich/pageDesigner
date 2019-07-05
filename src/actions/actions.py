@@ -1,10 +1,11 @@
 import os
 import sys
+import functools
 
 from PySide2 import QtWidgets, QtCore, QtGui, QtPrintSupport
 from PySide2.QtCore import SIGNAL
 
-from globals import APP_PATH, MAGICK_NUM, FILE_VERSION, PAGE_SIZE, POINT_SIZE
+from globals import APP_PATH, MAGICK_NUM, FILE_VERSION, PAGE_SIZE, POINT_SIZE, RAW
 from src.dialogs import settingsGUI
 from src.graphics import boxItem, pixmapItem
 from src.textItem import textItem, textItemDialog
@@ -34,11 +35,13 @@ def writeItemToBuffer(stream, items):
             stream.writeInt16(item.style)
 
 
-def readItemsFromBuffer(stream, scene, parent, offset=0, flag=None):
+def readItemsFromBuffer(stream, scene, parent, offset=0, flag=None, snap=None):
     if flag == None:
         type = ""
         position = QtCore.QPointF()
         matrix = QtGui.QMatrix()
+
+        a_snap = snap
 
 
         for i in parent.copiedItems:
@@ -51,20 +54,20 @@ def readItemsFromBuffer(stream, scene, parent, offset=0, flag=None):
                 text = stream.readQString()
                 font = QtGui.QFont()
                 stream >> font
-                textItem(text, position, rotation, scale, scene, font, matrix)
+                textItem(text, position, rotation, scale, scene, font, matrix, snap=a_snap)
             elif type == "Box":
                 rect = QtCore.QRectF()
                 stream >> rect
                 width = int(stream.readInt8())
                 join = QtCore.Qt.PenJoinStyle(stream.readInt16())
                 style = QtCore.Qt.PenStyle(stream.readInt16())
-                box = boxItem(position, rotation, scale, width, join, style, rect, matrix)
+                box = boxItem(position, rotation, scale, width, join, style, rect, matrix, scene=scene, snap=a_snap)
                 scene.clearSelection()
                 scene.addItem(box)
             elif type == "Pixmap":
                 image = QtGui.QPixmap()
                 stream >> image
-                pixmap = pixmapItem(position, rotation, scale, image)
+                pixmap = pixmapItem(position, rotation, scale, image, scene=scene, snap=a_snap)
                 scene.addItem(pixmap)
             scene.clearSelection()
         if offset:
@@ -79,26 +82,29 @@ def readItemsFromBuffer(stream, scene, parent, offset=0, flag=None):
         scale = float(stream.readFloat())
         stream >> position >> matrix
 
+        a_snap = snap
+        print(scene)
+
         if offset:
             position += QtCore.QPointF(offset, offset)
         if type == "Text":
             text = stream.readQString()
             font = QtGui.QFont()
             stream >> font
-            textItem(text, position, rotation, scale, scene, font, matrix)
+            textItem(text, position, rotation, scale, scene, font, matrix, snap=a_snap)
         elif type == "Box":
             rect = QtCore.QRectF()
             stream >> rect
             width = int(stream.readInt8())
             join = QtCore.Qt.PenJoinStyle(stream.readInt16())
             style = QtCore.Qt.PenStyle(stream.readInt16())
-            box = boxItem(position, rotation, scale, width, join, style, rect, matrix)
+            box = boxItem(position, rotation, scale, width, join, style, rect, matrix, scene=scene, snap=a_snap)
             scene.clearSelection()
             scene.addItem(box)
         elif type == "Pixmap":
             image = QtGui.QPixmap()
             stream >> image
-            pixmap = pixmapItem(position, rotation, scale, image)
+            pixmap = pixmapItem(position, rotation, scale, image, scene=scene, snap=a_snap)
             scene.addItem(pixmap)
         scene.clearSelection()
 
@@ -148,6 +154,7 @@ def save(scene, parent):
 
 
 def checkRawState(scene, parent):
+    global RAW
     if RAW == True:
         message = message = QtWidgets.QMessageBox.question(parent, "Page Designer -- Unsaved Changes",
                                                            "Save unsaved changes?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
@@ -181,11 +188,12 @@ class actionCopy(QtWidgets.QAction):
 
 
 class actionPaste(QtWidgets.QAction):
-    def __init__(self, scene, parent):
+    def __init__(self, scene, parent, snap=None):
         super(actionPaste, self).__init__(parent)
 
         self.p_scene = scene
         self.w_parent = parent
+        self.a_snap = snap
 
         self.setIcon(QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/toolbar/paste.svg")))
         self.setShortcut("Ctrl+V")
@@ -197,7 +205,7 @@ class actionPaste(QtWidgets.QAction):
         if self.w_parent.copiedItems.isEmpty():
             return
         stream = QtCore.QDataStream(self.w_parent.copiedItems, QtCore.QIODevice.ReadOnly)
-        readItemsFromBuffer(stream, self.p_scene, self.w_parent, self.w_parent.pasteOffset)
+        readItemsFromBuffer(stream, self.p_scene, self.w_parent, self.w_parent.pasteOffset, snap=self.a_snap)
         self.w_parent.pasteOffset += 5
 
 
@@ -280,12 +288,13 @@ class actionSelectAll(QtWidgets.QAction):
 
 
 class actionCreateBox(QtWidgets.QAction):
-    def __init__(self, scene, pos, parent):
+    def __init__(self, scene, pos, parent, snap):
         super(actionCreateBox, self).__init__(parent)
 
         self.p_scene = scene
         self.w_parent = parent
         self.a_pos = pos
+        self.a_snap = snap
 
         self.setIcon(QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/toolbar/addBox.svg")))
         self.setShortcut("Ctrl+B")
@@ -294,7 +303,9 @@ class actionCreateBox(QtWidgets.QAction):
         self.connect(SIGNAL("triggered()"), self.addBox)
 
     def addBox(self):
-        box = boxItem(self.a_pos(), 0, 1, 2, QtCore.Qt.BevelJoin, QtCore.Qt.SolidLine)
+        box = boxItem(
+            self.a_pos(), 0, 1, 2, QtCore.Qt.BevelJoin, QtCore.Qt.SolidLine,
+            rect=None, matrix=QtGui.QMatrix(), scene=self.p_scene, snap=self.a_snap)
         self.p_scene.clearSelection()
         self.p_scene.addItem(box)
         global RAW
@@ -302,12 +313,13 @@ class actionCreateBox(QtWidgets.QAction):
 
 
 class actionCreateText(QtWidgets.QAction):
-    def __init__(self, scene, pos, parent):
+    def __init__(self, scene, pos, parent, snap=None):
         super(actionCreateText, self).__init__(parent)
 
         self.p_scene = scene
         self.w_parent = parent
         self.a_pos = pos
+        self.a_snap = snap
 
         self.setIcon(QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/toolbar/addText.svg")))
         self.setShortcut("Ctrl+T")
@@ -316,17 +328,19 @@ class actionCreateText(QtWidgets.QAction):
         self.connect(SIGNAL("triggered()"), self.addText)
 
     def addText(self):
-        dialog = textItemDialog(position=self.a_pos(), scene=self.p_scene, parent=self.w_parent)
+        dialog = textItemDialog(position=self.a_pos(), scene=self.p_scene, parent=self.w_parent, snap=self.a_snap)
         dialog.exec_()
 
 
 class actionCreatePixmapItem(QtWidgets.QAction):
-    def __init__(self, scene, pos, parent):
+    def __init__(self, scene, pos, parent, snap=None):
         super(actionCreatePixmapItem, self).__init__(parent)
 
         self.p_scene = scene
+        print(self.p_scene)
         self.w_parent = parent
         self.a_pos = pos
+        self.a_snap = snap
 
         self.setIcon(QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/toolbar/addPixmap.svg")))
         self.setShortcut("Ctrl+P")
@@ -339,7 +353,9 @@ class actionCreatePixmapItem(QtWidgets.QAction):
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(self.w_parent, "Page Designer - Add Pixmap", path,
                                                          "Pixmap Files (*.bmp *.jpg *.jpeg *.png)",
                                                          options=QtWidgets.QFileDialog.DontUseNativeDialog)
-        pixmap = pixmapItem(self.a_pos(), 0, 1, fname)
+        pixmap = pixmapItem(
+            self.a_pos(), 0, 1, fname, QtGui.QMatrix(), self.p_scene, self.a_snap
+        )
         self.p_scene.clearSelection()
         self.p_scene.addItem(pixmap)
         global RAW
@@ -347,20 +363,25 @@ class actionCreatePixmapItem(QtWidgets.QAction):
 
 
 class actionOpenFile(QtWidgets.QAction):
-    def __init__(self, scene, parent):
+    def __init__(self, scene, parent, snap):
         super(actionOpenFile, self).__init__(parent)
 
         self.p_scene = scene
         self.w_parent = parent
+        self.a_snap = snap
 
         self.setText("Open file")
         self.setShortcut("Ctrl+O")
         self.setToolTip("Open existing file")
 
-        self.connect(SIGNAL("triggered()"), self.openFile)
+        fOpen = functools.partial(self.openFile, self.a_snap)
+        self.connect(SIGNAL("triggered()"), fOpen)
 
-    def openFile(self):
+    def openFile(self, snap=None):
         checkRawState(self.p_scene, self.w_parent)
+
+        if snap.isChecked():
+            snap.click()
 
         path = QtCore.QFileInfo(self.w_parent.filename).path() if self.w_parent.filename else "."
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(self.w_parent, "Page Designer - Open", path,
@@ -374,9 +395,11 @@ class actionOpenFile(QtWidgets.QAction):
             fh = QtCore.QFile(self.w_parent.filename)
             if not fh.open(QtCore.QIODevice.ReadOnly):
                 raise IOError(fh.errorString())
+
             items = self.p_scene.items()
             while items:
                 item = items.pop()
+                #print(item)
                 self.p_scene.removeItem(item)
                 del item
 
@@ -394,15 +417,16 @@ class actionOpenFile(QtWidgets.QAction):
                 raise IOError("unrecognised .pgd file version")
 
             while not fh.atEnd():
-                readItemsFromBuffer(stream, self.p_scene, self.w_parent, flag="open")
+                readItemsFromBuffer(stream, self.p_scene, self.w_parent, flag="open", snap=self.a_snap)
 
         except IOError as e:
             QtWidgets.QMessageBox.warning(self.w_parent, "Page Designer -- Open Error",
                                           f"Failed to open {self.w_parent.filename}: {e}")
-
         finally:
             if fh is not None:
                 fh.close()
+            #snap.click()
+
         global RAW
         RAW = False
 
