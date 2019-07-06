@@ -194,6 +194,16 @@ class controllWidget(QtWidgets.QWidget):
 
         self.scene = scene
 
+
+        label = QtWidgets.QWidget()
+        label.setFixedSize(200, 35)
+        label_layout = QtWidgets.QHBoxLayout()
+        label_layout.setAlignment(QtCore.Qt.AlignCenter)
+        label.setLayout(label_layout)
+        text = QtWidgets.QLabel("Property Box")
+        label_layout.addWidget(text)
+
+
         self.propBox = itemPropBox()
         self.propBox.rotationChanged.connect(self.onRotationChanged)
         self.propBox.scaleChanged.connect(self.onScaleChanged)
@@ -208,6 +218,8 @@ class controllWidget(QtWidgets.QWidget):
 
         layout = QtWidgets.QVBoxLayout(self)
         layout.setAlignment(QtCore.Qt.AlignTop)
+
+        layout.addWidget(label)
         layout.addWidget(self.propBox)
         layout.addWidget(self.gridPropBox)
 

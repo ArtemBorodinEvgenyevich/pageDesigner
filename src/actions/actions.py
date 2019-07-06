@@ -1,14 +1,20 @@
 import os
 import sys
 import functools
+import json
 
 from PySide2 import QtWidgets, QtCore, QtGui, QtPrintSupport
 from PySide2.QtCore import SIGNAL
 
 from globals import APP_PATH, MAGICK_NUM, FILE_VERSION, PAGE_SIZE, POINT_SIZE, RAW
-from src.dialogs import settingsGUI
+from src.widgets.dialogs import settingsGUI
 from src.graphics import boxItem, pixmapItem
 from src.textItem import textItem, textItemDialog
+
+def getConfigs():
+    with open(os.path.join(APP_PATH, "globalConfig.json"), "r") as settings:
+        data = json.load(settings)
+    return data
 
 
 def writeItemToBuffer(stream, items):
@@ -121,7 +127,7 @@ def selectedItems(scene, parent):
 
 def save(scene, parent):
     if not parent.filename:
-        path = "."
+        path = getConfigs()["common-path"]["project"]
         fname, _ = QtWidgets.QFileDialog.getSaveFileName(parent, "Page Designer -- Save As", path,
                                                          "Page Designer Files (*.pgd)",
                                                          options=QtWidgets.QFileDialog.DontUseNativeDialog)
@@ -349,7 +355,8 @@ class actionCreatePixmapItem(QtWidgets.QAction):
         self.connect(SIGNAL("triggered()"), self.addPixmap)
 
     def addPixmap(self):
-        path = QtCore.QFileInfo(self.w_parent.filename).path() if self.w_parent.filename else "."
+        #path = QtCore.QFileInfo(self.w_parent.filename).path() if self.w_parent.filename else "."
+        path = getConfigs()["common-path"]["pixmap"]
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(self.w_parent, "Page Designer - Add Pixmap", path,
                                                          "Pixmap Files (*.bmp *.jpg *.jpeg *.png)",
                                                          options=QtWidgets.QFileDialog.DontUseNativeDialog)
@@ -383,7 +390,8 @@ class actionOpenFile(QtWidgets.QAction):
         if snap.isChecked():
             snap.click()
 
-        path = QtCore.QFileInfo(self.w_parent.filename).path() if self.w_parent.filename else "."
+        #path = QtCore.QFileInfo(self.w_parent.filename).path() if self.w_parent.filename else "."
+        path = getConfigs()["common-path"]["project"]
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(self.w_parent, "Page Designer - Open", path,
                                                          "Page Designer Files (*.pgd)",
                                                          options=QtWidgets.QFileDialog.DontUseNativeDialog)
@@ -522,17 +530,3 @@ class actionOpenSettings_GUI(QtWidgets.QAction):
     def openSetting_GUI(self):
         dialog = settingsGUI()
         dialog.exec_()
-
-
-class actionOpenClosePropertyBox(QtWidgets.QAction):
-    def __init__(self, widget, parent):
-        super(actionOpenClosePropertyBox, self).__init__(parent)
-
-        self.w_parent = parent
-        self.a_widget = widget
-
-        self.setShortcut("Ctrl+N")
-        self.connect(SIGNAL("triggered()"), self.openClose)
-
-    def openClose(self):
-        self.a_widget.closeOpenWidget()

@@ -10,8 +10,6 @@ from PySide2 import QtWidgets
 from globals import CONFIG_EXIST, APP_PATH
 from stylesheets import breeze_resources
 
-print(os.getcwd())
-
 if __name__ == '__main__':
 
     for file in os.listdir(APP_PATH):
@@ -32,6 +30,10 @@ if __name__ == '__main__':
             },
             "undo-redo": {
                 "list-len": 10
+            },
+            "common-path": {
+                "pixmap": ".",
+                "project": "."
             },
             "additional": {
                 "message-box": True
