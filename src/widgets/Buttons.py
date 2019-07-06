@@ -45,4 +45,23 @@ class snapButton(QtWidgets.QToolButton):
             self.childWidget.setVisible(False)
 
 
+class setPathButton(QtWidgets.QPushButton):
+    def __init__(self, parent=None):
+        super(setPathButton, self).__init__(parent)
 
+        self.a_parent = parent
+
+        self.setText("...")
+        self.setToolTip("Click to choose folder")
+        self.setFixedWidth(30)
+
+        self.clicked.connect(self.writeToConfig)
+
+    def writeToConfig(self):
+        fname = QtWidgets.QFileDialog.getExistingDirectory(
+            self, "Select directory", ".", options=QtWidgets.QFileDialog.DontUseNativeDialog
+        )
+        if fname != "":
+            self.a_parent.setText(fname)
+        else:
+            self.a_parent.setText(".")
