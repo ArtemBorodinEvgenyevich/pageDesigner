@@ -3,7 +3,7 @@ import random
 from src.actions.actions import *
 from src.graphics import graphicsView, graphicsScene
 from src.widgets.Buttons import controlButton
-from src.widgets.propertyBox import itemPropBox
+from src.widgets.propertyBox import itemPropBox, gridPropBox
 from src.widgets.Buttons import snapButton
 
 QWIDGETSIZE_MAX = (1 << 24) - 1
@@ -15,7 +15,7 @@ class statusBar(QtWidgets.QStatusBar):
 
 
 class toolBox(QtWidgets.QToolBar):
-    def __init__(self, scene, view, position, parent=None):
+    def __init__(self, scene, view, position, parent=None, snap=None):
         super(toolBox, self).__init__(parent)
 
         self.setObjectName('toolBox')
@@ -26,7 +26,8 @@ class toolBox(QtWidgets.QToolBar):
         self.p_scene = scene  # pointer to the QGraphicsScene object
         self.p_view = view  # pointer to the QGraphicsView object
 
-        self.snap = snapButton(self.p_scene, self)
+        #self.snap = snapButton(self.p_scene, self)
+        self.snap = snap
 
         self.act_copy = actionCopy(self.p_scene, self.w_parent)
         self.act_paste = actionPaste(self.p_scene, self.w_parent, self.snap)
@@ -54,7 +55,7 @@ class toolBox(QtWidgets.QToolBar):
 
         self.addSeparator()
 
-        self.addWidget(self.snap)
+        #self.addWidget(self.snap)
 
 
 class menuBar(QtWidgets.QMenuBar):
@@ -107,7 +108,7 @@ class centralWidget(QtWidgets.QWidget):
 
         self.view = graphicsView(self.scene, self)
 
-        self.propPanel = controllWidget(self.view)
+        self.propPanel = controllWidget(self.view, self.scene)
 
         self.controlButton = controlButton(self)
 
@@ -185,20 +186,30 @@ class centralWidget(QtWidgets.QWidget):
             self.propPanel.setMaximumWidth(QWIDGETSIZE_MAX)
 
 class controllWidget(QtWidgets.QWidget):
-    def __init__(self, view, parent=None):
+    def __init__(self, view, scene, parent=None):
         super(controllWidget, self).__init__(parent)
 
         self.view = view
         self.view.currentItemChanged.connect(self.onCurrentItemChanged)
+
+        self.scene = scene
 
         self.propBox = itemPropBox()
         self.propBox.rotationChanged.connect(self.onRotationChanged)
         self.propBox.scaleChanged.connect(self.onScaleChanged)
         self.propBox.hide()
 
+        self.gridPropBox = gridPropBox()
+        self.gridPropBox.densityX_Changed.connect(self.onDensityX_Changed)
+        self.gridPropBox.densityY_Changed.connect(self.onDensityY_Changed)
+        self.gridPropBox.opacityChanged.connect(self.onOpacity_Changed)
+        self.gridPropBox.hide()
+
+
         layout = QtWidgets.QVBoxLayout(self)
         layout.setAlignment(QtCore.Qt.AlignTop)
         layout.addWidget(self.propBox)
+        layout.addWidget(self.gridPropBox)
 
     @QtCore.Slot(QtWidgets.QGraphicsItem)
     def onCurrentItemChanged(self, item):
@@ -206,6 +217,14 @@ class controllWidget(QtWidgets.QWidget):
         if item is not None:
             self.propBox.rotation = item.rotation()
             self.propBox.scale = item.scale()
+
+    @QtCore.Slot(bool)
+    def onCurrentStateChanged(self, state):
+        self.gridPropBox.setVisible(state)
+        if state:
+            self.gridPropBox.gridDensity_X = self.scene.gridDensity_X
+            self.gridPropBox.gridDensity_Y = self.scene.gridDensity_Y
+            self.gridPropBox.opacity = self.scene.lines[0].opacity()
 
     @QtCore.Slot(float)
     def onRotationChanged(self, rotation):
@@ -216,3 +235,21 @@ class controllWidget(QtWidgets.QWidget):
     def onScaleChanged(self, scale):
         it = self.view.currentItem
         it.setScale(scale)
+
+    @QtCore.Slot(int)
+    def onDensityX_Changed(self, value):
+        self.scene.gridDensity_X = value
+        self.scene.snap()
+        self.scene.snap()
+
+    @QtCore.Slot(int)
+    def onDensityY_Changed(self, value):
+        self.scene.gridDensity_Y = value
+        self.scene.snap()
+        self.scene.snap()
+
+    @QtCore.Slot(float)
+    def onOpacity_Changed(self, value):
+        lines = self.scene.lines
+        for i in lines:
+            i.setOpacity(value)

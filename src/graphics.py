@@ -104,9 +104,7 @@ class graphicsScene(QtWidgets.QGraphicsScene):
 
             self.state = True
 
-    def setGridOpacity(self, value):
-        for line in self.lines:
-            line.setOpacity(value)
+
 
 
 class boxItem(QtWidgets.QGraphicsRectItem):

@@ -20,12 +20,29 @@ class controlButton(QtWidgets.QPushButton):
                            "border: none;")
 
 class snapButton(QtWidgets.QToolButton):
-    def __init__(self, scene, parent=None):
+    currentStateChanged = QtCore.Signal(bool)
+    def __init__(self, scene, gridBox=None, parent=None):
         super(snapButton, self).__init__(parent)
 
         self.setCheckable(True)
         self.setShortcut("Ctrl+U")
         self.setIcon(QtGui.QIcon("stylesheets/toolbar/snap.svg"))
 
-        self.clicked.connect(scene.snap)
+        self.p_scene = scene
+
+        self.childWidget = gridBox
+
+        self.clicked.connect(self.p_scene.snap)
+        self.clicked.connect(self.setState)
+
+    def setState(self):
+        if self.isChecked():
+            self.childWidget.setVisible(True)
+            self.childWidget.gridDensity_X = self.p_scene.gridDensity_X
+            self.childWidget.gridDensity_Y = self.p_scene.gridDensity_Y
+            self.childWidget.opacity = self.p_scene.lines[0].opacity()
+        else:
+            self.childWidget.setVisible(False)
+
+
 

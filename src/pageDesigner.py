@@ -2,6 +2,7 @@ from PySide2 import QtWidgets, QtPrintSupport
 
 from .actions.actions import actionSelectAll
 from .widgets.mainWindow import toolBox, menuBar, statusBar, centralWidget
+from .widgets.Buttons import snapButton
 
 
 class mainWindow(QtWidgets.QMainWindow):
@@ -20,7 +21,10 @@ class mainWindow(QtWidgets.QMainWindow):
 
 
         # Init widgets
-        self.toolBox = toolBox(self.centralWidget.scene, self.centralWidget.view, self.centralWidget.position, self.centralWidget)
+
+        self.snapbtn = snapButton(self.centralWidget.scene, self.centralWidget.propPanel.gridPropBox, self)
+        self.toolBox = toolBox(self.centralWidget.scene, self.centralWidget.view, self.centralWidget.position, self.centralWidget, self.snapbtn)
+        self.toolBox.addWidget(self.snapbtn)
         self.menuBar = menuBar(self.centralWidget.scene, self.centralWidget, self.toolBox.snap)
         self.statusBar = statusBar()
 
