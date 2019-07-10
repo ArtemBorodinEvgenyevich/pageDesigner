@@ -1,10 +1,9 @@
 import random
 
 from src.actions.actions import *
-from src.graphics import graphicsView, graphicsScene
+from src.widgets.graphics import graphicsView, graphicsScene
 from src.widgets.Buttons import controlButton
-from src.widgets.propertyBox import itemPropBox, gridPropBox
-from src.widgets.Buttons import snapButton
+from src.widgets.propertyBox import itemPropBox, gridPropBox, labelBox
 
 QWIDGETSIZE_MAX = (1 << 24) - 1
 
@@ -46,6 +45,7 @@ class toolBox(QtWidgets.QToolBar):
         self.addAction(self.act_createText)
         self.addAction(self.act_createBox)
         self.addAction(self.act_createPixmap)
+        self.addSeparator()
 
         # Add editing functions
         self.addAction(self.act_copy)
@@ -80,13 +80,16 @@ class menuBar(QtWidgets.QMenuBar):
         self.fileMenu.addAction(self.act_quitApp)
 
         self.editMenu = QtWidgets.QMenu("&Edit", self)
-
         self.act_openSettings_GUI = actionOpenSettings_GUI(self.w_parent)
-
         self.editMenu.addAction(self.act_openSettings_GUI)
+
+        self.helpMenu = QtWidgets.QMenu("&Help", self)
+        self.act_openTutor = actionOpenTutor(self.w_parent)
+        self.helpMenu.addAction(self.act_openTutor)
 
         self.addMenu(self.fileMenu)
         self.addMenu(self.editMenu)
+        self.addMenu(self.helpMenu)
 
 
 class centralWidget(QtWidgets.QWidget):
@@ -103,8 +106,8 @@ class centralWidget(QtWidgets.QWidget):
         self.addOffset = 5
         self.borders = []
 
-        self.scene =  graphicsScene()
-        #TODO different sizes
+        self.scene = graphicsScene()
+        # TODO different sizes
 
         self.view = graphicsView(self.scene, self)
 
@@ -191,18 +194,9 @@ class controllWidget(QtWidgets.QWidget):
 
         self.view = view
         self.view.currentItemChanged.connect(self.onCurrentItemChanged)
-
         self.scene = scene
 
-
-        label = QtWidgets.QWidget()
-        label.setFixedSize(200, 35)
-        label_layout = QtWidgets.QHBoxLayout()
-        label_layout.setAlignment(QtCore.Qt.AlignCenter)
-        label.setLayout(label_layout)
-        text = QtWidgets.QLabel("Property Box")
-        label_layout.addWidget(text)
-
+        self.label = labelBox("Property box")
 
         self.propBox = itemPropBox()
         self.propBox.rotationChanged.connect(self.onRotationChanged)
@@ -219,7 +213,7 @@ class controllWidget(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout(self)
         layout.setAlignment(QtCore.Qt.AlignTop)
 
-        layout.addWidget(label)
+        layout.addWidget(self.label)
         layout.addWidget(self.propBox)
         layout.addWidget(self.gridPropBox)
 

@@ -15,6 +15,7 @@ def getConfigs():
 
 data = getConfigs()
 
+
 class styleGUI(QtWidgets.QWidget):
     def __init__(self):
         super(styleGUI, self).__init__()

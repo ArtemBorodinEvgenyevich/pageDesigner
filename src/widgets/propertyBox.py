@@ -7,6 +7,19 @@ def hex2QColor(color):
     b = int(color[4:6], 16)
     return QtGui.QColor(r, g, b)
 
+class labelBox(QtWidgets.QGroupBox):
+    def __init__(self, text, parent=None):
+        super(labelBox, self).__init__(parent)
+
+        self.setFixedSize(200, 50)
+        self.label = QtWidgets.QLabel(text)
+
+        label_layout = QtWidgets.QHBoxLayout(self)
+        label_layout.setAlignment(QtCore.Qt.AlignCenter)
+        self.setLayout(label_layout)
+
+        label_layout.addWidget(self.label)
+
 
 class itemPropBox(QtWidgets.QGroupBox):
     rotationChanged = QtCore.Signal(float)

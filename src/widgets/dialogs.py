@@ -19,7 +19,9 @@ class settingsGUI(QtWidgets.QDialog):
         super(settingsGUI, self).__init__()
 
         rect = QtWidgets.QApplication.desktop().availableGeometry()
+        self.setWindowTitle("App configuration")
         self.resize(int(rect.width() * 0.6), int(rect.height() * 0.5))
+
 
         layout = QtWidgets.QVBoxLayout(self)
         mainWidget = QtWidgets.QTabWidget()

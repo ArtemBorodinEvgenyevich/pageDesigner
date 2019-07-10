@@ -26,6 +26,7 @@ class snapButton(QtWidgets.QToolButton):
 
         self.setCheckable(True)
         self.setShortcut("Ctrl+U")
+        self.setToolTip("Enable grid snapping")
         self.setIcon(QtGui.QIcon("stylesheets/toolbar/snap.svg"))
 
         self.p_scene = scene

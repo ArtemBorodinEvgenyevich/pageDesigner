@@ -8,8 +8,9 @@ from PySide2.QtCore import SIGNAL
 
 from globals import APP_PATH, MAGICK_NUM, FILE_VERSION, PAGE_SIZE, POINT_SIZE, RAW
 from src.widgets.dialogs import settingsGUI
-from src.graphics import boxItem, pixmapItem
-from src.textItem import textItem, textItemDialog
+from src.widgets.graphics import boxItem, pixmapItem
+from src.widgets.textItem import textItem, textItemDialog
+from src.wizardUI.wizard import tutorWizard
 
 def getConfigs():
     with open(os.path.join(APP_PATH, "globalConfig.json"), "r") as settings:
@@ -522,7 +523,7 @@ class actionOpenSettings_GUI(QtWidgets.QAction):
 
         self.w_parent = parent
 
-        self.setText("Open GUI Settings")
+        self.setText("Open App Settings")
         self.setToolTip("Open settings to configure user interface appearance")
 
         self.connect(SIGNAL("triggered()"), self.openSetting_GUI)
@@ -530,3 +531,22 @@ class actionOpenSettings_GUI(QtWidgets.QAction):
     def openSetting_GUI(self):
         dialog = settingsGUI()
         dialog.exec_()
+
+
+class actionOpenTutor(QtWidgets.QAction):
+    def __init__(self, parent=None):
+        super(actionOpenTutor, self).__init__(parent)
+
+        self.setText("Open usage tutorial")
+        self.setToolTip("Open tutorial how to use the application")
+
+        self.connect(SIGNAL("triggered()"), self.openTutor)
+
+    def openTutor(self):
+        tutor = tutorWizard()
+        tutor.exec_()
+
+
+
+
+
