@@ -6,16 +6,14 @@ import json
 from PySide2 import QtWidgets, QtCore, QtGui, QtPrintSupport
 from PySide2.QtCore import SIGNAL
 
-from globals import APP_PATH, MAGICK_NUM, FILE_VERSION, PAGE_SIZE, POINT_SIZE, RAW
+from globals import APP_PATH, MAGICK_NUM, FILE_VERSION, PAGE_SIZE, POINT_SIZE, RAW, getConfigs
 from src.widgets.dialogs import settingsGUI
 from src.widgets.graphics import boxItem, pixmapItem
-from src.widgets.textItem import textItem, textItemDialog
+from src.widgets.textItem import textItem, codeSnippetItemDialog, textItemDialog
 from src.wizardUI.wizard import tutorWizard
+from src.wizardUI.license.licenses import licenseWizard
 
-def getConfigs():
-    with open(os.path.join(APP_PATH, "globalConfig.json"), "r") as settings:
-        data = json.load(settings)
-    return data
+
 
 
 def writeItemToBuffer(stream, items):
@@ -25,8 +23,16 @@ def writeItemToBuffer(stream, items):
             stream.writeFloat(item.rotation())
             stream.writeFloat(item.scale())
             stream << item.pos() << item.matrix()
-            stream.writeQString(item.toPlainText())
+
+            if item.mode == "plain":
+                stream.writeQString(item.toPlainText())
+                stream.writeQString("plain")
+            elif item.mode == "html":
+                stream.writeQString(item.toHtml())
+                stream.writeQString("html")
+
             stream << item.font()
+
         elif isinstance(item, QtWidgets.QGraphicsPixmapItem):
             stream.writeQString("Pixmap")
             stream.writeFloat(item.rotation())
@@ -59,9 +65,10 @@ def readItemsFromBuffer(stream, scene, parent, offset=0, flag=None, snap=None):
 
             if type == "Text":
                 text = stream.readQString()
+                mode = stream.readQString()
                 font = QtGui.QFont()
                 stream >> font
-                textItem(text, position, rotation, scale, scene, font, matrix, snap=a_snap)
+                textItem(text, position, rotation, scale, scene, font, matrix, snap=a_snap, mode=mode)
             elif type == "Box":
                 rect = QtCore.QRectF()
                 stream >> rect
@@ -96,9 +103,10 @@ def readItemsFromBuffer(stream, scene, parent, offset=0, flag=None, snap=None):
             position += QtCore.QPointF(offset, offset)
         if type == "Text":
             text = stream.readQString()
+            mode = stream.readQString()
             font = QtGui.QFont()
             stream >> font
-            textItem(text, position, rotation, scale, scene, font, matrix, snap=a_snap)
+            textItem(text, position, rotation, scale, scene, font, matrix, snap=a_snap, mode=mode)
         elif type == "Box":
             rect = QtCore.QRectF()
             stream >> rect
@@ -178,7 +186,8 @@ class actionCopy(QtWidgets.QAction):
         self.p_scene = scene
         self.w_parent = parent
 
-        self.setIcon(QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/toolbar/copy.svg")))
+        #self.setIcon(QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/toolbar/copy.svg")))
+        self.setIcon(QtGui.QIcon(":/icons/toolbar/copy.svg"))
         self.setShortcut("Ctrl+C")
         self.setToolTip("Copy selected objects")
 
@@ -202,7 +211,8 @@ class actionPaste(QtWidgets.QAction):
         self.w_parent = parent
         self.a_snap = snap
 
-        self.setIcon(QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/toolbar/paste.svg")))
+        #self.setIcon(QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/toolbar/paste.svg")))
+        self.setIcon(QtGui.QIcon(":/icons/toolbar/paste.svg"))
         self.setShortcut("Ctrl+V")
         self.setToolTip("Paste copied objects")
 
@@ -223,7 +233,8 @@ class actionCut(QtWidgets.QAction):
         self.p_scene = scene
         self.w_parent = parent
 
-        self.setIcon(QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/toolbar/cut.svg")))
+        #self.setIcon(QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/toolbar/cut.svg")))
+        self.setIcon(QtGui.QIcon(":/icons/toolbar/cut.svg"))
         self.setShortcut("Ctrl+X")
         self.setToolTip("Remove and copy selected objects")
 
@@ -255,7 +266,8 @@ class actionDelete(QtWidgets.QAction):
         self.p_scene = scene
         self.w_parent = parent
 
-        self.setIcon(QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/toolbar/delete.svg")))
+        #self.setIcon(QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/toolbar/delete.svg")))
+        self.setIcon(QtGui.QIcon(":/icons/toolbar/delete.svg"))
         self.setShortcut("Ctrl+D")
         self.setToolTip("Delete selected objects")
 
@@ -281,7 +293,6 @@ class actionSelectAll(QtWidgets.QAction):
         self.p_scene = scene
         self.w_parent = parent
 
-        # self.setIcon(QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/toolbar/addBox.svg")))
         self.setShortcut("Shift+A")
         self.setToolTip("Select all items")
 
@@ -303,7 +314,7 @@ class actionCreateBox(QtWidgets.QAction):
         self.a_pos = pos
         self.a_snap = snap
 
-        self.setIcon(QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/toolbar/addBox.svg")))
+        self.setIcon(QtGui.QIcon(":/icons/toolbar/addBox.svg"))
         self.setShortcut("Ctrl+B")
         self.setToolTip("Create resizable frame")
 
@@ -319,6 +330,25 @@ class actionCreateBox(QtWidgets.QAction):
         RAW = True
 
 
+class actionCreateCodeSnippet(QtWidgets.QAction):
+    def __init__(self, scene, pos, parent, snap=None):
+        super(actionCreateCodeSnippet, self).__init__(parent)
+
+        self.p_scene = scene
+        self.w_parent = parent
+        self.a_pos = pos
+        self.a_snap = snap
+
+        self.setText("Add code snippet")
+        self.setToolTip("Create code snippet item")
+
+        self.connect(SIGNAL("triggered()"), self.addText)
+
+    def addText(self):
+        dialog = codeSnippetItemDialog(position=self.a_pos(), scene=self.p_scene, parent=self.w_parent, snap=self.a_snap)
+        dialog.exec_()
+
+
 class actionCreateText(QtWidgets.QAction):
     def __init__(self, scene, pos, parent, snap=None):
         super(actionCreateText, self).__init__(parent)
@@ -328,8 +358,7 @@ class actionCreateText(QtWidgets.QAction):
         self.a_pos = pos
         self.a_snap = snap
 
-        self.setIcon(QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/toolbar/addText.svg")))
-        self.setShortcut("Ctrl+T")
+        self.setText("Add text")
         self.setToolTip("Create text item")
 
         self.connect(SIGNAL("triggered()"), self.addText)
@@ -337,6 +366,7 @@ class actionCreateText(QtWidgets.QAction):
     def addText(self):
         dialog = textItemDialog(position=self.a_pos(), scene=self.p_scene, parent=self.w_parent, snap=self.a_snap)
         dialog.exec_()
+
 
 
 class actionCreatePixmapItem(QtWidgets.QAction):
@@ -349,7 +379,8 @@ class actionCreatePixmapItem(QtWidgets.QAction):
         self.a_pos = pos
         self.a_snap = snap
 
-        self.setIcon(QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/toolbar/addPixmap.svg")))
+        #self.setIcon(QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/toolbar/addPixmap.svg")))
+        self.setIcon(QtGui.QIcon(":/icons/toolbar/addPixmap.svg"))
         self.setShortcut("Ctrl+P")
         self.setToolTip("Create image item")
 
@@ -540,12 +571,25 @@ class actionOpenTutor(QtWidgets.QAction):
         self.setText("Open usage tutorial")
         self.setToolTip("Open tutorial how to use the application")
 
-        self.connect(SIGNAL("triggered()"), self.openTutor)
+        self.connect(SIGNAL("triggered()"), self.openWizard)
 
-    def openTutor(self):
+    def openWizard(self):
         tutor = tutorWizard()
         tutor.exec_()
 
+
+class actionOpenLicense(QtWidgets.QAction):
+    def __init__(self, parent=None):
+        super(actionOpenLicense, self).__init__(parent)
+
+        self.setText("License")
+        self.setToolTip("Show licenses app and used frameworks licences")
+
+        self.connect(SIGNAL("triggered()"), self.openWizard)
+
+    def openWizard(self):
+        widget = licenseWizard()
+        widget.exec_()
 
 
 

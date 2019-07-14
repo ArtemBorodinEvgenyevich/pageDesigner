@@ -1,6 +1,7 @@
 import functools
 from globals import PAGE_SIZE
 from PySide2 import QtGui, QtCore, QtWidgets
+from globals import RAW
 
 
 class graphicsView(QtWidgets.QGraphicsView):
@@ -9,7 +10,7 @@ class graphicsView(QtWidgets.QGraphicsView):
     def __init__(self, scene, snap, parent=None):
         super(graphicsView, self).__init__(parent)
         self.scene = scene
-        self.snap = snap  # TODO
+        self.snap = snap
 
         self.setDragMode(QtWidgets.QGraphicsView.RubberBandDrag)
         self.setRenderHint(QtGui.QPainter.Antialiasing)
@@ -103,8 +104,6 @@ class graphicsScene(QtWidgets.QGraphicsScene):
             del self.lines[:]
 
             self.state = True
-
-
 
 
 class boxItem(QtWidgets.QGraphicsRectItem):
@@ -289,8 +288,6 @@ class pixmapItem(QtWidgets.QGraphicsPixmapItem):
 
         self.setSelected(True)
         self.setFocus()
-
-
 
     def setGridIntersection(self, scene, state):
         if state is True:

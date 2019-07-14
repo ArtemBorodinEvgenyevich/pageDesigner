@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WizardPage</class>
+ <widget class="QWizardPage" name="WizardPage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>967</width>
+    <height>444</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>967</width>
+    <height>444</height>
+   </size>
+  </property>
+  <property name="baseSize">
+   <size>
+    <width>967</width>
+    <height>444</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string notr="true">Introduction tutorial</string>
+  </property>
+  <property name="locale">
+   <locale language="English" country="UnitedStates"/>
+  </property>
+  <property name="title">
+   <string/>
+  </property>
+  <attribute name="pageId">
+   <string notr="true"/>
+  </attribute>
+  <widget class="QWidget" name="gridLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>110</y>
+     <width>951</width>
+     <height>321</height>
+    </rect>
+   </property>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="2">
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>Creates a text item. Type it in the following dialog.</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="2">
+     <widget class="QLabel" name="label_2">
+      <property name="text">
+       <string>Creates a box item. You can resize rectangle shape with a Middle-Mouse button. Click a Right-Mouse button to edit additional parameters.</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="0">
+     <widget class="QToolButton" name="toolButton_6">
+      <property name="text">
+       <string>...</string>
+      </property>
+      <property name="icon">
+       <iconset resource="../../stylesheets/toolbarIco.qrc">
+        <normaloff>:/icons/toolbar/cut.svg</normaloff>:/icons/toolbar/cut.svg</iconset>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="2">
+     <widget class="QLabel" name="label_4">
+      <property name="text">
+       <string>Copies all selected objects and write them in the local buffer. Be careful! Next copy action will overwrite items in the buffer.</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <widget class="QToolButton" name="toolButton">
+      <property name="locale">
+       <locale language="English" country="UnitedStates"/>
+      </property>
+      <property name="text">
+       <string>...</string>
+      </property>
+      <property name="icon">
+       <iconset resource="../../stylesheets/toolbarIco.qrc">
+        <normaloff>:/icons/toolbar/addText.svg</normaloff>:/icons/toolbar/addText.svg</iconset>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="0">
+     <widget class="QToolButton" name="toolButton_5">
+      <property name="text">
+       <string>...</string>
+      </property>
+      <property name="icon">
+       <iconset resource="../../stylesheets/toolbarIco.qrc">
+        <normaloff>:/icons/toolbar/paste.svg</normaloff>:/icons/toolbar/paste.svg</iconset>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QToolButton" name="toolButton_2">
+      <property name="text">
+       <string>...</string>
+      </property>
+      <property name="icon">
+       <iconset resource="../../stylesheets/toolbarIco.qrc">
+        <normaloff>:/icons/toolbar/addBox.svg</normaloff>:/icons/toolbar/addBox.svg</iconset>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="2">
+     <widget class="QLabel" name="label_3">
+      <property name="text">
+       <string>Creates a pixmap item. Page Designer suports the most common formats: jpeg, png, bmp, svg.</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="2">
+     <widget class="QLabel" name="label_5">
+      <property name="text">
+       <string>Pastes all items from the local buffer. </string>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="0">
+     <widget class="QToolButton" name="toolButton_7">
+      <property name="text">
+       <string>...</string>
+      </property>
+      <property name="icon">
+       <iconset resource="../../stylesheets/toolbarIco.qrc">
+        <normaloff>:/icons/toolbar/delete.svg</normaloff>:/icons/toolbar/delete.svg</iconset>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="2">
+     <widget class="QLabel" name="label_7">
+      <property name="text">
+       <string>Deletes all selected items.</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="0">
+     <widget class="QToolButton" name="toolButton_4">
+      <property name="text">
+       <string>...</string>
+      </property>
+      <property name="icon">
+       <iconset resource="../../stylesheets/toolbarIco.qrc">
+        <normaloff>:/icons/toolbar/copy.svg</normaloff>:/icons/toolbar/copy.svg</iconset>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="2">
+     <widget class="QLabel" name="label_6">
+      <property name="text">
+       <string>Removes all selected items from the scene and write them in the local buffer. Be careful! Next cut action will overwrite items in the buffer.</string>
+      </property>
+     </widget>
+    </item>
+    <item row="7" column="2">
+     <widget class="QLabel" name="label_8">
+      <property name="text">
+       <string>Sets up a grid and item snapping to it while moving. </string>
+      </property>
+     </widget>
+    </item>
+    <item row="7" column="0">
+     <widget class="QToolButton" name="toolButton_8">
+      <property name="text">
+       <string>...</string>
+      </property>
+      <property name="icon">
+       <iconset resource="../../stylesheets/toolbarIco.qrc">
+        <normaloff>:/icons/toolbar/snap.svg</normaloff>:/icons/toolbar/snap.svg</iconset>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QToolButton" name="toolButton_3">
+      <property name="text">
+       <string>...</string>
+      </property>
+      <property name="icon">
+       <iconset resource="../../stylesheets/toolbarIco.qrc">
+        <normaloff>:/icons/toolbar/addPixmap.svg</normaloff>:/icons/toolbar/addPixmap.svg</iconset>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="1">
+     <spacer name="horizontalSpacer">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="sizeType">
+       <enum>QSizePolicy::Fixed</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>6</width>
+        <height>20</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="verticalLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>9</x>
+     <y>20</y>
+     <width>951</width>
+     <height>80</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+     <widget class="QLabel" name="label_9">
+      <property name="font">
+       <font>
+        <pointsize>26</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Tool bar components</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources>
+  <include location="../../stylesheets/toolbarIco.qrc"/>
+ </resources>
+ <connections/>
+</ui>

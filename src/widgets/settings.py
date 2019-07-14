@@ -1,22 +1,13 @@
 import json
 import os
 from functools import partial
-
 from PySide2 import QtWidgets, QtCore, QtGui
-
-from globals import APP_PATH, CONFIG_CHANGED
-from src.widgets.Buttons import setPathButton
-
-
-def getConfigs():
-    with open(os.path.join(APP_PATH, "globalConfig.json"), "r") as settings:
-        data = json.load(settings)
-    return data
-
-data = getConfigs()
+from globals import APP_PATH, getConfigs
+from src.widgets.buttons import setPathButton
 
 
 class styleGUI(QtWidgets.QWidget):
+    """ Tab element, contains GUI style controls """
     def __init__(self):
         super(styleGUI, self).__init__()
 
@@ -28,17 +19,28 @@ class styleGUI(QtWidgets.QWidget):
         frame.setLayout(fLayout)
 
         for name, f_path, p_path in (
-                ("Breeze Light", "stylesheets/light.qss", "stylesheets/styles_preview/light.png"),
-                ("Breeze Dark", "stylesheets/dark.qss", "stylesheets/styles_preview/dark.png")):
+                ("Breeze Light", ":/styles/stylesheets/light.qss", ":/preview/styles_preview/light.png"),
+                ("Breeze Dark", ":/styles/stylesheets/dark.qss", ":/preview/styles_preview/dark.png"),
+                ("Fusion", "Fusion", ":/preview/styles_preview/fusion.png"),
+                ("Native style", "Native", ":/preview/styles_preview/os_style.png")):
+
             wrapper = partial(self.setData, f_path, p_path)
+            wrapper_pix = partial(self.setPix, p_path)
+
             radio = QtWidgets.QRadioButton()
             radio.setText(name)
             radio.setBaseSize(QtCore.QSize(100, 100))
             radio.clicked.connect(wrapper)
+            radio.clicked.connect(wrapper_pix)
+            radio.clicked.connect(self.setCheck)
+
             fLayout.addWidget(radio)
 
         rect = QtWidgets.QApplication.desktop().availableGeometry()
-        self.pixmap = QtGui.QPixmap(os.path.join(APP_PATH, data["stylesheet"]["pixmap"]))
+
+        CURRENT_CONFIG = getConfigs()
+
+        self.pixmap = QtGui.QPixmap(CURRENT_CONFIG["stylesheet"]["pixmap"])
         self.preview = QtWidgets.QLabel()
         self.preview.setScaledContents(True)
         self.preview.setFixedSize(int(rect.width() * 0.3), int(rect.height() * 0.3))
@@ -47,18 +49,29 @@ class styleGUI(QtWidgets.QWidget):
         layout.addWidget(frame)
         layout.addWidget(self.preview)
 
-    def setData(self, f_path, p_path):
-        data["stylesheet"]["file"] = f_path
-        data["stylesheet"]["pixmap"] = p_path
+    def setCheck(self):
+        CURRENT_CONFIG = getConfigs()
+
+        CURRENT_CONFIG["additional"]["changed-settings"] = True
 
         with open(os.path.join(APP_PATH, "globalConfig.json"), "w") as f:
-            json.dump(data, f, indent=4)
+            json.dump(CURRENT_CONFIG, f, indent=4)
+
+    def setData(self, f_path, p_path):
+        CURRENT_CONFIG = getConfigs()
+
+        CURRENT_CONFIG["stylesheet"]["file"] = f_path
+        CURRENT_CONFIG["stylesheet"]["pixmap"] = p_path
+
+        with open(os.path.join(APP_PATH, "globalConfig.json"), "w") as f:
+            json.dump(CURRENT_CONFIG, f, indent=4)
 
         self.pixmap = QtGui.QPixmap(os.path.join(APP_PATH, p_path))
         self.preview.setPixmap(self.pixmap)
-        global CONFIG_CHANGED
-        CONFIG_CHANGED = True
-        print("Done!")
+
+    def setPix(self, p_path):
+        newPixmap = QtGui.QPixmap(p_path)
+        self.preview.setPixmap(newPixmap)
 
 
 class warningDialog(QtWidgets.QMessageBox):
@@ -76,24 +89,40 @@ class warningDialog(QtWidgets.QMessageBox):
         self.buttonClicked.connect(self.close)
 
     def clickBox(self, state):
+        CURRENT_CONFIG = getConfigs()
+
         if state == QtCore.Qt.Checked:
-            data["additional"]["message-box"] = False
-            with open(os.path.join(APP_PATH, "globalConfig.json"), "w") as f:
-                json.dump(data, f, indent=4)
+            CURRENT_CONFIG["additional"]["message-box"] = False
         else:
-            print("unchecked")
+            CURRENT_CONFIG["additional"]["message-box"] = True
+
+        with open(os.path.join(APP_PATH, "globalConfig.json"), "w") as f:
+            json.dump(CURRENT_CONFIG, f, indent=4)
 
 
 class pathLineEdit(QtWidgets.QLineEdit):
+    """ Text line to set path to a given config"""
     def __init__(self, configName, parent=None):
         super(pathLineEdit, self).__init__(parent)
 
         self.cName = configName
 
-        self.setToolTip(f"Click twice, write or push button to setup path")
-        self.setText(data["common-path"][self.cName])
+        self.setToolTip("Click twice, write or push button to setup path")
+
+        CURRENT_CONFIG = getConfigs()
+        self.setText(CURRENT_CONFIG["common-path"][self.cName])
 
         self.textChanged[str].connect(self.writeToConfig)
+        self.textChanged.connect(self.setCheck)
+
+
+    def setCheck(self):
+        CURRENT_CONFIG = getConfigs()
+
+        CURRENT_CONFIG["additional"]["changed-settings"] = True
+
+        with open(os.path.join(APP_PATH, "globalConfig.json"), "w") as f:
+            json.dump(CURRENT_CONFIG, f, indent=4)
 
 
     def mouseDoubleClickEvent(self, event:QtGui.QMouseEvent):
@@ -105,12 +134,15 @@ class pathLineEdit(QtWidgets.QLineEdit):
             self.writeToConfig(fname)
 
     def writeToConfig(self, path):
+        CURRENT_CONFIG = getConfigs()
+
         if path != "":
-            data["common-path"][self.cName] = path
+            CURRENT_CONFIG["common-path"][self.cName] = path
+            CURRENT_CONFIG["additional"]["changed-settings"] = True
         else:
-            data["common-path"][self.cName] = "."
+            CURRENT_CONFIG["common-path"][self.cName] = "."
         with open(os.path.join(APP_PATH, "globalConfig.json"), "w") as f:
-            json.dump(data, f, indent=4)
+            json.dump(CURRENT_CONFIG, f, indent=4)
 
 
 class groupWidget(QtWidgets.QWidget):
@@ -131,6 +163,7 @@ class groupWidget(QtWidgets.QWidget):
 
 
 class baseConfig(QtWidgets.QWidget):
+    """ Tab element, contains paths information """
     def __init__(self):
         super(baseConfig, self).__init__()
 

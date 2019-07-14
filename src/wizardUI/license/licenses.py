@@ -3,10 +3,10 @@ from PySide2.QtUiTools import QUiLoader
 import os
 
 
-class tutorWizard(QtWidgets.QWizard):
-    """ Contains introduction tutorial """
+class licenseWizard(QtWidgets.QWizard):
+    """ Contains licenses and credits """
     def __init__(self, parent=None):
-        super(tutorWizard, self).__init__(parent)
+        super(licenseWizard, self).__init__(parent)
 
         self.setWindowTitle("Introduction tutorial")
         pages = self.findPages()
@@ -16,7 +16,8 @@ class tutorWizard(QtWidgets.QWizard):
         ui_files = []
         cnt = 1
         current_dir = os.path.dirname(os.path.realpath(__file__))
-        while len(ui_files) != 13:
+        print(current_dir)
+        while len(ui_files) != 3:
             for file in os.listdir(current_dir):
                 if file.startswith(f"{cnt}."):
                     ui_files.append(os.path.join(current_dir, file))

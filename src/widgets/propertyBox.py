@@ -7,28 +7,34 @@ def hex2QColor(color):
     b = int(color[4:6], 16)
     return QtGui.QColor(r, g, b)
 
-class labelBox(QtWidgets.QGroupBox):
+
+class labelBox(QtWidgets.QLabel):
+    """ Property box label """
     def __init__(self, text, parent=None):
         super(labelBox, self).__init__(parent)
 
+        self.setText("Property box")
+        self.setAlignment(QtCore.Qt.AlignCenter)
+
         self.setFixedSize(200, 50)
-        self.label = QtWidgets.QLabel(text)
+        #self.label = QtWidgets.QLabel(text)
 
-        label_layout = QtWidgets.QHBoxLayout(self)
-        label_layout.setAlignment(QtCore.Qt.AlignCenter)
-        self.setLayout(label_layout)
+        #label_layout = QtWidgets.QHBoxLayout(self)
+        #label_layout.setAlignment(QtCore.Qt.AlignCenter)
+        #self.setLayout(label_layout)
 
-        label_layout.addWidget(self.label)
+        #label_layout.addWidget(self.label)
 
 
 class itemPropBox(QtWidgets.QGroupBox):
+    """ Widget to access and edit QGraphicsItem basic properties """
     rotationChanged = QtCore.Signal(float)
     scaleChanged = QtCore.Signal(float)
 
     def __init__(self, parent=None):
         super(itemPropBox, self).__init__(parent)
 
-        self.setTitle("Item properties")
+        self.setTitle("Item properties:")
         self.setFixedSize(200, 100)
 
         self.m_rotationSpinbox = QtWidgets.QDoubleSpinBox(
@@ -63,6 +69,7 @@ class itemPropBox(QtWidgets.QGroupBox):
 
 
 class gridPropBox(QtWidgets.QGroupBox):
+    """ Widget to access snap grid properties """
     densityX_Changed = QtCore.Signal(int)
     densityY_Changed = QtCore.Signal(int)
     opacityChanged = QtCore.Signal(float)
@@ -70,7 +77,7 @@ class gridPropBox(QtWidgets.QGroupBox):
     def __init__(self, parent=None):
         super(gridPropBox, self).__init__(parent)
 
-        self.setTitle("Grid properties")
+        self.setTitle("Grid properties:")
         self.setFixedSize(200, 120)
 
         self.m_gridDensityX_SpinBox = QtWidgets.QSpinBox(

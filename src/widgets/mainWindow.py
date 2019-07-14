@@ -2,18 +2,22 @@ import random
 
 from src.actions.actions import *
 from src.widgets.graphics import graphicsView, graphicsScene
-from src.widgets.Buttons import controlButton
+from src.widgets.buttons import controlButton
 from src.widgets.propertyBox import itemPropBox, gridPropBox, labelBox
+
 
 QWIDGETSIZE_MAX = (1 << 24) - 1
 
-class statusBar(QtWidgets.QStatusBar):
+
+class statusBar(QtWidgets.QStatusBar):      # FIXME: add signals to statusbar in each QAction subclass
+    """ Indicates action status """
     def __init__(self, parent=None):
         super(statusBar, self).__init__(parent)
         self.setObjectName('statusBar')
 
 
 class toolBox(QtWidgets.QToolBar):
+    """ Contains QGraphicsScene editing functions """
     def __init__(self, scene, view, position, parent=None, snap=None):
         super(toolBox, self).__init__(parent)
 
@@ -25,8 +29,8 @@ class toolBox(QtWidgets.QToolBar):
         self.p_scene = scene  # pointer to the QGraphicsScene object
         self.p_view = view  # pointer to the QGraphicsView object
 
-        #self.snap = snapButton(self.p_scene, self)
         self.snap = snap
+        self.textBtn = textTool(self.p_scene, self.a_pos, self.w_parent, self.snap)
 
         self.act_copy = actionCopy(self.p_scene, self.w_parent)
         self.act_paste = actionPaste(self.p_scene, self.w_parent, self.snap)
@@ -34,15 +38,16 @@ class toolBox(QtWidgets.QToolBar):
         self.act_delete = actionDelete(self.p_scene, self.w_parent)
         self.act_selectAll = actionSelectAll(self.p_scene, self.w_parent)
 
-        self.act_createText = actionCreateText(self.p_scene, self.a_pos, self.w_parent, self.snap)
         self.act_createBox = actionCreateBox(self.p_scene, self.a_pos, self.w_parent, self.snap)
         self.act_createPixmap = actionCreatePixmapItem(self.p_scene, self.a_pos, self.w_parent, self.snap)
 
+        # focus policy for macOS users      FIXME: test and remove if necessary
         MAC = "qt_mac_set_native_menubar" in dir()
         if not MAC:
             self.setFocusPolicy(QtCore.Qt.NoFocus)
 
-        self.addAction(self.act_createText)
+        # Add geometry functions
+        self.addWidget(self.textBtn)
         self.addAction(self.act_createBox)
         self.addAction(self.act_createPixmap)
         self.addSeparator()
@@ -55,10 +60,9 @@ class toolBox(QtWidgets.QToolBar):
 
         self.addSeparator()
 
-        #self.addWidget(self.snap)
-
 
 class menuBar(QtWidgets.QMenuBar):
+    """ Contains file manipulating functions """
     def __init__(self, scene, parent=None, snap=None):
         super(menuBar, self).__init__(parent)
         self.setObjectName("menuBar")
@@ -85,7 +89,9 @@ class menuBar(QtWidgets.QMenuBar):
 
         self.helpMenu = QtWidgets.QMenu("&Help", self)
         self.act_openTutor = actionOpenTutor(self.w_parent)
+        self.act_openLicense = actionOpenLicense(self.w_parent)
         self.helpMenu.addAction(self.act_openTutor)
+        self.helpMenu.addAction(self.act_openLicense)
 
         self.addMenu(self.fileMenu)
         self.addMenu(self.editMenu)
@@ -93,7 +99,7 @@ class menuBar(QtWidgets.QMenuBar):
 
 
 class centralWidget(QtWidgets.QWidget):
-
+    """ Contains QGaphicsScene subclass with property frame """
     def __init__(self, printerSupport, parent=None):
         super(centralWidget, self).__init__(parent)
 
@@ -106,8 +112,7 @@ class centralWidget(QtWidgets.QWidget):
         self.addOffset = 5
         self.borders = []
 
-        self.scene = graphicsScene()
-        # TODO different sizes
+        self.scene = graphicsScene()        # TODO: make different sizes
 
         self.view = graphicsView(self.scene, self)
 
@@ -126,13 +131,15 @@ class centralWidget(QtWidgets.QWidget):
         layout.setSpacing(0)
         layout.addWidget(self.propPanel)
 
-
+        # define parameters for property frame animation
         self.m_deltaX = 0
         self.m_animation = QtCore.QPropertyAnimation(
             self.propPanel, b"maximumWidth", parent=self, duration=200
         )
 
     def position(self):
+        """ Get mouse position """
+
         point = self.mapFromGlobal(QtGui.QCursor.pos())
         if not self.view.geometry().contains(point):
             coord = random.randint(36, 144)
@@ -167,6 +174,8 @@ class centralWidget(QtWidgets.QWidget):
         self.borders.append(border2)
 
     def slideWidget(self):
+        """ Animates property frame"""
+
         if self.controlButton.isChecked():
             self.propPanel.setMaximumWidth(self.propPanel.width())
             start = int(self.propPanel.maximumWidth())
@@ -174,13 +183,13 @@ class centralWidget(QtWidgets.QWidget):
             end = 0
             self.m_animation.setStartValue(start)
             self.m_animation.setEndValue(end)
-            self.controlButton.setIcon(QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/buttons/openPanel.svg")))
+            self.controlButton.setIcon(QtGui.QIcon(":/icons/buttons/openPanel.svg"))
         else:
             start = int(self.propPanel.maximumWidth())
             end = self.m_deltaX
             self.m_animation.setStartValue(start)
             self.m_animation.setEndValue(end)
-            self.controlButton.setIcon(QtGui.QIcon(os.path.join(APP_PATH, "stylesheets/buttons/collapsePanel.svg")))
+            self.controlButton.setIcon(QtGui.QIcon(":/icons/buttons/collapsePanel.svg"))
 
         self.m_animation.start()
 
@@ -188,13 +197,19 @@ class centralWidget(QtWidgets.QWidget):
         if not self.controlButton.isChecked():
             self.propPanel.setMaximumWidth(QWIDGETSIZE_MAX)
 
-class controllWidget(QtWidgets.QWidget):
+
+class controllWidget(QtWidgets.QFrame):
+    """ Contains QGraphicsItem editable properties """
     def __init__(self, view, scene, parent=None):
         super(controllWidget, self).__init__(parent)
 
         self.view = view
         self.view.currentItemChanged.connect(self.onCurrentItemChanged)
         self.scene = scene
+
+        # Setting unique name to setup css frame not inherited by widgets' children
+        self.setObjectName("controlFrame")
+        self.setStyleSheet("#controlFrame {border:1px solid grey;}")
 
         self.label = labelBox("Property box")
 
@@ -208,7 +223,6 @@ class controllWidget(QtWidgets.QWidget):
         self.gridPropBox.densityY_Changed.connect(self.onDensityY_Changed)
         self.gridPropBox.opacityChanged.connect(self.onOpacity_Changed)
         self.gridPropBox.hide()
-
 
         layout = QtWidgets.QVBoxLayout(self)
         layout.setAlignment(QtCore.Qt.AlignTop)
@@ -259,3 +273,22 @@ class controllWidget(QtWidgets.QWidget):
         lines = self.scene.lines
         for i in lines:
             i.setOpacity(value)
+
+
+class textTool(QtWidgets.QToolButton):      # FIXME: solve cyclic imports and move to buttons.py
+    """ Contains dialogs to add different types of QGraphicsTextItems """
+    def __init__(self, scene, pos, parent, snap):
+        super(textTool, self).__init__(parent)
+
+        self.setIcon(QtGui.QIcon(":/icons/toolbar/addText.svg"))
+        self.setShortcut("Ctrl+T")
+        self.setToolTip("Create text item")
+        self.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+
+        self.act_createCode = actionCreateCodeSnippet(scene, pos, parent, snap)
+        self.act_createText = actionCreateText(scene, pos, parent, snap)
+
+        menu = QtWidgets.QMenu(self)
+        menu.addAction(self.act_createText)
+        menu.addAction(self.act_createCode)
+        self.setMenu(menu)
