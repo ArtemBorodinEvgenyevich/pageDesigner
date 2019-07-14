@@ -8,6 +8,7 @@ class tutorWizard(QtWidgets.QWizard):
     def __init__(self, parent=None):
         super(tutorWizard, self).__init__(parent)
 
+
         self.setWindowTitle("Introduction tutorial")
         pages = self.findPages()
         self.initPages(pages)
@@ -16,7 +17,7 @@ class tutorWizard(QtWidgets.QWizard):
         ui_files = []
         cnt = 1
         current_dir = os.path.dirname(os.path.realpath(__file__))
-        while len(ui_files) != 13:
+        while len(ui_files) != 15:
             for file in os.listdir(current_dir):
                 if file.startswith(f"{cnt}."):
                     ui_files.append(os.path.join(current_dir, file))
