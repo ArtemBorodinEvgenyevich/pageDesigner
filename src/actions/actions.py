@@ -1,17 +1,15 @@
-import os
 import sys
 import functools
-import json
 
 from PySide2 import QtWidgets, QtCore, QtGui, QtPrintSupport
 from PySide2.QtCore import SIGNAL
 
-from globals import APP_PATH, MAGICK_NUM, FILE_VERSION, PAGE_SIZE, POINT_SIZE, RAW, getConfigs
+from globals import MAGICK_NUM, FILE_VERSION, PAGE_SIZE, POINT_SIZE, getConfigs, RAW
 from src.widgets.dialogs import settingsGUI
 from src.widgets.graphics import boxItem, pixmapItem
 from src.widgets.textItem import textItem, codeSnippetItemDialog, textItemDialog
 from src.wizardUI.wizard import tutorWizard
-from src.wizardUI.license.licenses import licenseWizard
+from src.license.licenses import licenseWizard
 
 
 
@@ -590,7 +588,3 @@ class actionOpenLicense(QtWidgets.QAction):
     def openWizard(self):
         widget = licenseWizard()
         widget.exec_()
-
-
-
-

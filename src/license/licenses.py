@@ -1,6 +1,12 @@
 from PySide2 import QtCore, QtWidgets
 from PySide2.QtUiTools import QUiLoader
-import os
+import os, sys
+
+
+if getattr(sys, "frozen", False):
+    currentDir = os.path.join(sys._MEIPASS, "wizardUI")
+else:
+    currentDir = os.path.dirname(os.path.realpath(__file__))
 
 
 class licenseWizard(QtWidgets.QWizard):
@@ -15,12 +21,10 @@ class licenseWizard(QtWidgets.QWizard):
     def findPages(self):
         ui_files = []
         cnt = 1
-        current_dir = os.path.dirname(os.path.realpath(__file__))
-        print(current_dir)
         while len(ui_files) != 3:
-            for file in os.listdir(current_dir):
+            for file in os.listdir(currentDir):
                 if file.startswith("{}.".format(cnt)):
-                    ui_files.append(os.path.join(current_dir, file))
+                    ui_files.append(os.path.join(currentDir, file))
                     cnt += 1
         return ui_files
 
@@ -28,11 +32,6 @@ class licenseWizard(QtWidgets.QWizard):
         loader = QUiLoader()
         for i in files:
             file = QtCore.QFile(str(i))
-            file.open(QtCore.QFile.ReadOnly)
-
-            file.reset()
-            page = loader.load(file)
-
-            file.close()
-
-            self.addPage(page)
+            if file.open(QtCore.QFile.ReadOnly):
+                page = loader.load(file)
+                self.addPage(page)

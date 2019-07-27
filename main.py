@@ -78,9 +78,12 @@ if __name__ == '__main__':
 
 
     form = mainWindow()
-    rect = QtWidgets.QApplication.desktop().availableGeometry()
-    form.resize(int(rect.width() * 0.6), int(rect.height() * 0.9))
-    form.show()
+    form.setWindowIcon(QtGui.QIcon(":/logos/icon.png"))
+    form.showMaximized()
+
+    #rect = QtWidgets.QApplication.desktop().availableGeometry()
+    #form.resize(int(rect.width() * 0.6), int(rect.height() * 0.9))
+    #form.show()
 
     if CURRENT_CONFIG["additional"]["startup-message"]:
         widget = welcomeShow()
