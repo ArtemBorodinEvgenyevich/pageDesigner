@@ -159,7 +159,7 @@ def save(scene, parent):
         writeItemToBuffer(stream, items)
     except IOError as e:
         QtWidgets.QMessageBox.warning(parent, "Page Designer -- Save Error",
-                                          f"Failed to save {parent.filename}: {e}")
+                                          "Failed to save {}: {}".format(parent.filename, e))
     finally:
         if fh is not None:
             fh.close()
@@ -276,7 +276,7 @@ class actionDelete(QtWidgets.QAction):
     def delete(self):
         items = selectedItems(self.p_scene, self.w_parent)
         if items and QtWidgets.QMessageBox.question(self.w_parent, "Page Designer - Delete",
-                                                    f"Delete {len(items)} item{'s' if len(items) != 1 else '.'}?",
+                                                    "Delete {} item{}?".format(len(items), 's' if len(items) != 1 else '.'),
                                                     QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.Yes:
             while items:
                 item = items.pop()
@@ -461,7 +461,7 @@ class actionOpenFile(QtWidgets.QAction):
 
         except IOError as e:
             QtWidgets.QMessageBox.warning(self.w_parent, "Page Designer -- Open Error",
-                                          f"Failed to open {self.w_parent.filename}: {e}")
+                                          "Failed to open {}: {}".format(self.w_parent.filename, e))
         finally:
             if fh is not None:
                 fh.close()

@@ -19,7 +19,7 @@ class licenseWizard(QtWidgets.QWizard):
         print(current_dir)
         while len(ui_files) != 3:
             for file in os.listdir(current_dir):
-                if file.startswith(f"{cnt}."):
+                if file.startswith("{}.".format(cnt)):
                     ui_files.append(os.path.join(current_dir, file))
                     cnt += 1
         return ui_files

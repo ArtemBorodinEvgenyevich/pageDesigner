@@ -19,7 +19,7 @@ class tutorWizard(QtWidgets.QWizard):
         current_dir = os.path.dirname(os.path.realpath(__file__))
         while len(ui_files) != 15:
             for file in os.listdir(current_dir):
-                if file.startswith(f"{cnt}."):
+                if file.startswith("{}.".format(cnt)):
                     ui_files.append(os.path.join(current_dir, file))
                     cnt += 1
         return ui_files
