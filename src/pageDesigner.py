@@ -9,7 +9,7 @@ class mainWindow(QtWidgets.QMainWindow):
     """ Initializes main components"""
     def __init__(self):
         super(mainWindow, self).__init__()
-        self.setWindowTitle("Page Designer --Alpha--")
+        self.setWindowTitle("Page Designer 1.0.0")
         self.setWindowIcon(QtGui.QIcon(":/icons/icon.png"))
         self.setObjectName("mainWindow")
 
