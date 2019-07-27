@@ -1,9 +1,12 @@
-import os
+import os, sys
 import json
 
 PROGRAM_VERSION = "1.0.0"
 
-APP_PATH = os.path.dirname(os.path.realpath(__file__))
+if getattr(sys, "frozen", False):
+    APP_PATH = os.path.dirname(sys._MEIPASS)
+else:
+    APP_PATH = os.path.dirname(os.path.realpath(__file__))
 
 RAW = False
 SNAP = False
