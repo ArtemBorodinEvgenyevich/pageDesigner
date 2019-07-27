@@ -4,7 +4,7 @@ import os, sys
 
 
 if getattr(sys, "frozen", False):
-    currentDir = os.path.join(sys._MEIPASS, "wizardUI")
+    currentDir = os.path.join(sys._MEIPASS, "license")
 else:
     currentDir = os.path.dirname(os.path.realpath(__file__))
 
