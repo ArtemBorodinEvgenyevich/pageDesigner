@@ -19,6 +19,19 @@ class textEditorWindow(QtWidgets.QMainWindow):
         self.toolBar = editorToolBar(self.editor)
         self.addToolBar(self.toolBar)
 
+        self.statusbar = QtWidgets.QStatusBar()
+        self.setStatusBar(self.statusbar)
+
+        self.editor.cursorPositionChanged.connect(self.cursorPos)
+
+    def cursorPos(self):
+        cursor = self.editor.textCursor()
+
+        line = cursor.blockNumber() + 1
+        col = cursor.columnNumber()
+
+        self.statusbar.showMessage("Line: {} | Column: {}".format(line, col))
+
 
 class editorToolBar(QtWidgets.QToolBar):
     """ Contains html text format functions """
